@@ -1,4 +1,4 @@
-package com.github.rowak;
+package io.github.rowak;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

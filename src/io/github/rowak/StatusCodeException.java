@@ -1,4 +1,4 @@
-package com.github.rowak;
+package io.github.rowak;
 
 /**
  * A base exception to parent the implementations.

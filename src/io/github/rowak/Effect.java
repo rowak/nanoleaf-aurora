@@ -1,4 +1,4 @@
-package com.github.rowak;
+package io.github.rowak;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,8 +9,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.github.rowak.StatusCodeException.UnauthorizedException;
-import com.github.rowak.StatusCodeException.UnprocessableEntityException;
+import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.StatusCodeException.UnprocessableEntityException;
 
 /**
  * A <i>local</i> interface for an <code>Effect</code>. Setter methods in this class

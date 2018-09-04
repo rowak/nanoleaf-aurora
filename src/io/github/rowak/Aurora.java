@@ -1,4 +1,4 @@
-package com.github.rowak;
+package io.github.rowak;
 
 import java.net.InetSocketAddress;
 import java.util.Random;
@@ -7,9 +7,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.github.kevinsawicki.http.HttpRequest;
-import com.github.rowak.StatusCodeException.ResourceNotFoundException;
-import com.github.rowak.StatusCodeException.UnauthorizedException;
-import com.github.rowak.StatusCodeException.UnprocessableEntityException;
+
+import io.github.rowak.StatusCodeException.ResourceNotFoundException;
+import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.StatusCodeException.UnprocessableEntityException;
 
 /**
  * The primary class in the API. Contains methods and other
@@ -812,21 +813,6 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException
 		{
 			return Boolean.parseBoolean(HttpRequest.get(getURL("rhythm/rhythmActive")).body());
-		}
-		
-		/**
-		 * Set whether the Rhythm's microphone is active.
-		 * @param active  whether the microphone is active or not
-		 * @return  (200 OK, 401 Unauthorized)
-		 * @throws UnauthorizedException  if the access token is invalid
-		 */
-		public int setActive(boolean active)
-				throws StatusCodeException, UnauthorizedException
-		{
-			String body = String.format("{\"rhythmActive\": %b}", active);
-			HttpRequest req = HttpRequest.put(getURL("rhythm")).send(body);
-			checkStatusCode(req.code());
-			return req.code();
 		}
 		
 		/**
