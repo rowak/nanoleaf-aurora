@@ -95,6 +95,26 @@ public class Aurora
 		this.model = controllerInfo.getString("model");
 	}
 	
+	public String getHost()
+	{
+		return this.host;
+	}
+	
+	public int getPort()
+	{
+		return this.port;
+	}
+	
+	public String getApiLevel()
+	{
+		return this.apiLevel;
+	}
+	
+	public String getAccessToken()
+	{
+		return this.accessToken;
+	}
+	
 	/**
 	 * Returns the Aurora's <code>State</code> object which contains
 	 * methods for accessing and modifying state information.
@@ -1055,14 +1075,14 @@ public class Aurora
 	}
 	
 	/**
-	 * Constructs a full URL to make the Aurora API call.
+	 * Constructs a full URL to make an Aurora API call.
 	 * @param endpoint  the final location in the API call (used to navigate <code>JSON</code>)
 	 * @return  a completed URL (ready to be sent)
 	 */
 	private String getURL(String endpoint)
 	{
-		return "http://" + host + ":" + port + "/api/" +
-				apiLevel + "/" + accessToken + "/" + endpoint;
+		return String.format("http://%s:%d/api/%s/%s/%s",
+				host, port, apiLevel, accessToken, endpoint);
 	}
 	
 	/**

@@ -16,6 +16,9 @@ import org.json.JSONObject;
 
 import com.github.kevinsawicki.http.HttpRequest;
 
+import io.github.rowak.StatusCodeException.InternalServerErrorException;
+import io.github.rowak.StatusCodeException.UnauthorizedException;
+
 /**
  * A utility class that makes getting started with the API easier.
  */
@@ -133,7 +136,7 @@ public class Setup
 	public static String createAccessToken(String host,
 			int port, String apiLevel) throws StatusCodeException
 	{
-		HttpRequest req = HttpRequest.post(String.format("http://%s:%s%snew",
+		HttpRequest req = HttpRequest.post(String.format("http://%s:%d/api/%s/new",
 				host, port, apiLevel));
 		String body = req.body();
 		if (req.code() == 200)
@@ -154,17 +157,16 @@ public class Setup
 	 * @param port  the port of the Aurora controller (default=16021)
 	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: /api/v1/)
 	 * @param accessToken  a unique authentication token
-	 * @throws StatusCodeException  if the response status code not 2xx
+	 * @throws UnauthorizedException  if the access token is invalid
+	 * @throws InternalServerErrorException  something went wrong inside the Aurora
 	 */
 	public static void destroyAccessToken(String host,
-			int port, String apiLevel, String accessToken) throws StatusCodeException
+			int port, String apiLevel, String accessToken)
+					throws StatusCodeException, UnauthorizedException, InternalServerErrorException
 	{
-		HttpRequest req = HttpRequest.delete(String.format("http://%s:%s%s%s",
+		HttpRequest req = HttpRequest.delete(String.format("http://%s:%d/api/%s/%s",
 				host, port, apiLevel, accessToken));
-		if (req.code() != 204)
-		{
-			Setup.checkStatusCode(req.code());
-		}
+		Setup.checkStatusCode(req.code());
 	}
 	
 	/**

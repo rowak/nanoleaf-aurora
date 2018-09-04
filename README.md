@@ -10,7 +10,7 @@ Simply add the following dependency to your ```pom.xml``` file in your project.
 <dependency>
   <groupId>io.github.rowak</groupId>
   <artifactId>nanoleaf-aurora</artifactId>
-  <version>1.02</version>
+  <version>1.03</version>
 </dependency>
 ```
 ### Manual
