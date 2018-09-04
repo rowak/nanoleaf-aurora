@@ -28,7 +28,7 @@ Next define the API level (Currently "v1").
 ```Java
 String apiLevel = "v1";
 ```
-Then you can create an access token. (Note: You must physically hold down the power button on your Aurora controller before running the following code).
+Then you can create an access token. (Note: You must physically hold down the power button on your Aurora controller for 5-7 seconds before running the following code).
 ```Java
 String accessToken = Setup.createAccessToken(host, port, apiLevel);
 ```
@@ -96,3 +96,44 @@ boolean connected = aurora.rhythm().getConnected();        // whether or not the
 boolean active = aurora.rhythm().getActive();              // whether or not the Rhythm's microphone is currently active (blue led is on)
 boolean auxAvailable = aurora.rhythm().getAuxAvailable();  // whether of not the aux (3.5mm) input is available
 ```
+
+## The ```Effect``` Class
+The ```Effect``` class is a helper class for parsing raw effect json data received from the Aurora into a **local** object. This allows for easier reading from and writing to effects, and helps make creating new effects much easier. The Aurora class implements these methods where necessary by default so you don't have call them yourself.
+Note: The instance variables in ```Effect``` objects are not all used by certain effect types. Attempting to get these variables will either result in ```-1``` (int/double) or ```null``` (String/Color[]). Use the [official API](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) as a reference when working with ```Effect``` objects.
+### Example
+The code below requests an effect named "My Effect" from the Aurora, sets the effect's delay time to 10, then uploads the changes back to the Aurora.
+```Java
+Effect effect = aurora.effects().getEffect("My Effect");  // creates a new Effect object by automatically parsing the json data
+effect.setDelayTime(10);                                  // sets the effect delay time. Note: This change does not affect the physical Aurora display, only the local Effect object
+aurora.effects().addEffect(effect);                       // uploads the modified effect to the aurora
+```
+
+## The ```Effect.Animation``` Class
+The ```Animation``` class (located in the ```Effect``` class) is a more advanced helper class that assists in the creation of ```static```-type effects.
+### Example
+```Java
+Panel[] panels = aurora.panelLayout().getPositionData();     // creates a new array of type Panel, containing all of the connected Panel data
+Animation anim = new Animation(aurora);                      // creates an instance of the animation object
+for (Panel panel : panels)
+{
+  anim.addFrame(panel, new Frame(255, 0, 255, 0, 20));       // add a new frame to the animation (for each panel). Frame takes 5 arguments: red, green, blue, white, and transitionTime
+  anim.addFrame(panel, new Frame(0, 255, 255, 0, 20));       // add a new frame to the animation (for each panel). Frame takes 5 arguments: red, green, blue, white, and transitionTime
+}
+Effect effect = anim.createAnimation("My Animation", true);  // builds the animation data and saves it to a new custom-type effect
+aurora.effects().addEffect(effect);                          // uploads the new effect to the Aurora
+```
+
+## StatusCodeExceptions
+A ```StatusCodeException``` is thrown whenever the response code from a request to the Aurora is an error (400, 401, 403, 404, 422, 500).
+### 400 - Bad Request
+Indicates that the request body itself was malformed (not the reqeust body content). *This exception is usually handelled by the API and is not usually accessable by the user.*
+### 401 - Unauthorized
+Indicates that the resource that was requested requires a valid access token. If this exception is thrown, your access token is likely invalid.
+### 403 - Forbidden
+Indicates that the user tried to create an access token without first physically holding down the power button on the Aurora for 5-7 seconds. This exception can only be thrown by the ```createAccessToken()``` method.
+### 404 - Resource Not Found
+Indicates that the resource that was requested from the Aurora does not exist. An example of when this may occur is when calling ```Aurora.getEffect(String effectName)```. If the effect ```effectName``` does not exist on the Aurora, then this exception will be thrown. 
+### 422 - Unprocessable Entity
+Indicates that the body content of a request is invalid. If this exception is thrown, one or more arguments may have been invalid when an API method was called.
+### 500 - Internal Server Error
+I'm not sure what exactly causes this error, but something goes wrong inside the Aurora (this exception can only be thrown by the ``Setup.destroyAccessToken()`` method).
