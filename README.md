@@ -2,6 +2,7 @@
 A simple java wrapper for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional helper methods and classes to make your life easier.
 
 ## [Documentation](https://htmlpreview.github.io/?https://github.com/rowak/nanoleaf-aurora/blob/master/doc/index.html)
+Note: The index.html file in the documentation is currently broken.
 
 ## Installation
 ### Maven
@@ -84,7 +85,7 @@ aurora.effects().previewEffect(effect);                          // displays an 
 ### Panel Layout
 The panel layout methods are mostly getters used to get various information about the arrangement of the Aurora panels. Below are a few examples of these methods.
 ```Java
-int numPanels = aurora.panelLayout(true).getNumPanels();      // returns the number of connected panels. Note: The Rhythm module counts as a panel by default. Use ```includeRhythm``` to choose whether to include this or not
+int numPanels = aurora.panelLayout(true).getNumPanels();  // returns the number of connected panels. Note: The Rhythm module counts as a panel by default. Use ```includeRhythm``` to choose whether to include this or not
 int sideLength = aurora.panelLayout().getSideLength();    // returns the side length of each panel
 Panel[] panels = aurora.panelLayout().getPositionData();  // returns an array of type Panel containing each connected Aurora panel
 ```
