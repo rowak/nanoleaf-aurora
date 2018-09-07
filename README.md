@@ -71,7 +71,7 @@ aurora.state().setColorTemperature(4000);             // sets the color temperat
 ```
 
 ### Effects
-The API includes various effect methods for adding, removing, renaming, previewing, and getting effects from the Aurora. Below are a few examples, but refer to the [documentation](https://htmlpreview.github.io/?https://github.com/rowak/nanoleaf-aurora/blob/master/doc/index.html) for more information.
+The API includes various effect methods for adding, removing, renaming, previewing, and getting effects from the Aurora. Below are a few examples, but refer to the [project documentation](https://htmlpreview.github.io/?https://github.com/rowak/nanoleaf-aurora/blob/master/doc/index.html) for more information.
 ```Java
 String currentEffect = aurora.effects().getCurrentEffectName();  // returns the name of the current effect
 aurora.effects().setEffect(effectName);                          // sets the current effect to an existing effect
@@ -99,7 +99,7 @@ boolean auxAvailable = aurora.rhythm().getAuxAvailable();  // whether of not the
 
 ## The ```Effect``` Class
 The ```Effect``` class is a helper class for parsing raw effect json data received from the Aurora into a **local** object. This allows for easier reading from and writing to effects, and helps make creating new effects much easier. The Aurora class implements these methods where necessary by default so you don't have call them yourself.
-Note: The instance variables in ```Effect``` objects are not all used by certain effect types. Attempting to get these variables will either result in ```-1``` (int/double) or ```null``` (String/Color[]). Use the [official API](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) as a reference when working with ```Effect``` objects.
+Note: The instance variables in ```Effect``` objects are not all used by certain effect types. Attempting to get these variables will either result in ```-1``` (int/double) or ```null``` (String/Color[]). Use the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) as a reference when working with ```Effect``` objects.
 ### Example
 The code below requests an effect named "My Effect" from the Aurora, sets the effect's delay time to 10, then uploads the changes back to the Aurora.
 ```Java
@@ -107,6 +107,8 @@ Effect effect = aurora.effects().getEffect("My Effect");  // creates a new Effec
 effect.setDelayTime(10);                                  // sets the effect delay time. Note: This change does not affect the physical Aurora display, only the local Effect object
 aurora.effects().addEffect(effect);                       // uploads the modified effect to the aurora
 ```
+### Warning
+Changing json data on your Aurora can cause effects to break if you attempt to change certain properties (that shouldn't be changed) or json structure. If your Nanoleaf app suddenly starts crashing, force stop the app (Android) or restart your device (iOS) to return the app to a stable state. I came across this multiple times while messing around with the api. Refer to the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) for more information about effects and their properties.
 
 ## The ```Effect.Animation``` Class
 The ```Animation``` class (located in the ```Effect``` class) is a more advanced helper class that assists in the creation of ```static```-type effects.
