@@ -111,7 +111,7 @@ aurora.effects().addEffect(effect);                       // uploads the modifie
 Changing json data on your Aurora can cause effects to break if you attempt to change certain properties (that shouldn't be changed) or json structure. If your Nanoleaf app suddenly starts crashing, force stop the app (Android) or restart your device (iOS) to return the app to a stable state. I came across this multiple times while messing around with the api. Refer to the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) for more information about effects and their properties.
 
 ## The ```Effect.Animation``` Class
-The ```Animation``` class (located in the ```Effect``` class) is a more advanced helper class that assists in the creation of ```static```-type effects. Animation frames are added to the animation object using the ```Effect.Animation.addFrame()``` method. This method adds a frame for only **one** panel at a time. Once all of the frames have been defined, an ```Effect``` object can be built from the animation object using the ```Effect.Animation.createAnimation()``` method.
+The ```Animation``` class (located in the ```Effect``` class) is a more advanced helper class that assists in the creation of ```custom```-type effects. Animation frames are added to the animation object using the ```Effect.Animation.addFrame()``` method. This method adds a frame for only **one** panel at a time. Once all of the frames have been defined, an ```Effect``` object can be built from the animation object using the ```Effect.Animation.createAnimation()``` method.
 ### Example
 ```Java
 Panel[] panels = aurora.panelLayout().getPositionData();     // creates a new array of type Panel, containing all of the connected Panel data
