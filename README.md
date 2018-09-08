@@ -46,28 +46,28 @@ Contains basic methods used for getting and setting Aurora state information (br
 #### On/Off
 ```Java
 boolean isOn = aurora.state().getOn();  // returns true if the Arora is on and false if it is off
-aurora.state().setOn(true);             // sets the on state of the Aurora
+aurora.state().setOn(true/false);       // sets the on state of the Aurora
 aurora.state().toggleOn();              // toggles the state of the Aurora (on -> off, off -> on)
 ```
 #### Brightness
 ```Java
 int brightness = aurora.state().getBrightness();  // returns the brightness of the Aurora
-aurora.state().setBrightness(100);                // sets the brightness of the Aurora (max = 100, min = 0)
+aurora.state().setBrightness(0-100);              // sets the brightness of the Aurora (max = 100, min = 0)
 ```
 #### Hue
 ```Java
 int hue = aurora.state().getHue();  // returns the hue of the aurora (solid effects only)
-aurora.state().setHue(360);         // sets the hue of the aurora (max = 360, min = 0)
+aurora.state().setHue(0-360);       // sets the hue of the aurora (max = 360, min = 0)
 ```
 #### Saturation
 ```Java
 int saturation = aurora.state().getSaturation();  // returns the saturation of the Aurora (solid effects only)
-aurora.state().setSaturation(100);                // sets the saturation of the Aurora (max = 100, min = 0)
+aurora.state().setSaturation(0-100);              // sets the saturation of the Aurora (max = 100, min = 0)
 ```
 #### Color Temperature
 ```Java
 int colorTemp = aurora.state().getColorTemperature()  // returns the color temperature in Kelvins of the Aurora (color temperature effects only)
-aurora.state().setColorTemperature(4000);             // sets the color temperature of the Aurora (color temperature effects only)
+aurora.state().setColorTemperature(1200-6500);        // sets the color temperature of the Aurora (color temperature effects only)
 ```
 
 ### Effects
@@ -84,9 +84,9 @@ aurora.effects().previewEffect(effect);                          // displays an 
 ### Panel Layout
 The panel layout methods are mostly getters used to get various information about the arrangement of the Aurora panels. Below are a few examples of these methods.
 ```Java
-int numPanels = aurora.panelLayout(true).getNumPanels();  // returns the number of connected panels. Note: The Rhythm module counts as a panel by default. Use ```includeRhythm``` to choose whether to include this or not
-int sideLength = aurora.panelLayout().getSideLength();    // returns the side length of each panel
-Panel[] panels = aurora.panelLayout().getPositionData();  // returns an array of type Panel containing each connected Aurora panel
+int numPanels = aurora.panelLayout().getNumPanels(true/false);  // returns the number of connected panels. Note: The Rhythm module counts as a panel by default. Use ```includeRhythm``` to choose whether to include this or not
+int sideLength = aurora.panelLayout().getSideLength();          // returns the side length of each panel
+Panel[] panels = aurora.panelLayout().getPositionData();        // returns an array of type Panel containing each connected Aurora panel
 ```
 
 ### Rhythm
