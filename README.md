@@ -1,5 +1,5 @@
 # Nanoleaf Aurora Java API
-A simple java wrapper for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional helper methods and classes to make your life easier.
+A java wrapper for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional high-level helper methods and classes to make your life easier. The API is designed to be simpler to use than the official API by aiming to avoid the need for working with JSON data.
 
 ## [Documentation](https://htmlpreview.github.io/?https://github.com/rowak/nanoleaf-aurora/blob/master/doc/index.html)
 
