@@ -1,10 +1,5 @@
 package io.github.rowak;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,8 +8,8 @@ import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.StatusCodeException.UnprocessableEntityException;
 
 /**
- * A <i>local</i> interface for an <code>Effect</code>. Setter methods in this class
- * will not have an effect on the Aurora.
+ * A <i>local</i> interface for an Aurora <code>Effect</code>.
+ * Setter methods in this class will not have an effect on the Aurora.
  */
 public class Effect
 {
@@ -47,6 +42,11 @@ public class Effect
 	{
 		FLOW, EXPLODE, WHEEL, HIGHLIGHT,
 		RANDOM, FADE, STATIC, CUSTOM, PLUGIN
+	}
+	
+	public enum Direction
+	{
+		LEFT, RIGHT, UP, DOWN, OUTWARDS
 	}
 	
 	/**
@@ -83,7 +83,9 @@ public class Effect
 			int hue = colors.getInt("hue");
 			int sat = colors.getInt("saturation");
 			int brightness = colors.getInt("brightness");
-			ef.palette[i] = new Effect().new Color(hue,
+//			ef.palette[i] = new Effect().new Color(hue,
+//					sat, brightness);
+			ef.palette[i] = Effect.Color.fromHSB(hue,
 					sat, brightness);
 			try
 			{
@@ -313,6 +315,24 @@ public class Effect
 		}
 				
 		ef.setAnimData(animData.toString());
+		ef.setLoop(false);
+		return ef;
+	}
+	
+	/**
+	 * Creates a new static-type <code>Effect</code> using
+	 * previously created animation data.
+	 * @param effectName  the desired name of the new effect
+	 * @param animData  the desired animation data
+	 * @return  a new static-type <code>Effect</code>
+	 */
+	public static Effect createStaticEffect(String effectName,
+			String animData)
+	{
+		Effect ef = new Effect();
+		ef.setName(effectName);
+		ef.setAnimType(Effect.Type.STATIC);
+		ef.setAnimData(animData);
 		ef.setLoop(false);
 		return ef;
 	}
@@ -742,38 +762,74 @@ public class Effect
 	 * Represents a single color in an effect's palette.
 	 * Used to store <code>JSON</code>-parsed data.
 	 */
-	public class Color
+	public static class Color
 	{
 		private int hue, saturation, brightness;
 		private double probability;
 		
 		/**
-		 * Creates a simple instance of <code>Color</code> <u>without</u> probability.
+		 * Creates an HSB instance of <code>Color</code> <u>without</u> probability.
 		 * @param hue  the hue of the color
 		 * @param saturation  the saturation of the color
 		 * @param brightness  the brightness of the color
+		 * @return  a new <code>Color</code>
 		 */
-		public Color(int hue, int saturation, int brightness)
+		public static Color fromHSB(int hue,
+				int saturation, int brightness)
 		{
-			this.hue = hue;
-			this.saturation = saturation;
-			this.brightness = brightness;
-			this.probability = -1;
+			return fromHSB(hue, saturation, brightness, -1);
 		}
 		
 		/**
-		 * Creates an instance of <code>Color</code> with probability.
+		 * Creates an HSB instance of <code>Color</code> with probability.
 		 * @param hue  the hue of the color
 		 * @param saturation  the saturation of the color
 		 * @param brightness  the brightness of the color
 		 * @param probability  the probability of the color appearing in the effect
+		 * @return  a new <code>Color</code>
 		 */
-		public Color(int hue, int saturation, int brightness, double probability)
+		public static Color fromHSB(int hue, int saturation,
+				int brightness, double probability)
 		{
-			this.hue = hue;
-			this.saturation = saturation;
-			this.brightness = brightness;
-			this.probability = probability;
+			Color color = new Color();
+			color.hue = hue;
+			color.saturation = saturation;
+			color.brightness = brightness;
+			color.probability = probability;
+			return color;
+		}
+		
+		/**
+		 * Creates an RGB instance of <code>Color</code> <u>without</u> probability.
+		 * @param red  the red RGB value of the desired color
+		 * @param green  the green RGB value of the desired color
+		 * @param blue  the blue RGB value of the desired color
+		 * @return  a new <code>Color</code>
+		 */
+		public static Color fromRGB(int red, int green, int blue)
+		{
+			return fromRGB(red, green, blue, -1);
+		}
+		
+		/**
+		 * Creates an RGB instance of <code>Color</code> with probability.
+		 * @param red  the red RGB value of the desired color
+		 * @param green  the green RGB value of the desired color
+		 * @param blue  the blue RGB value of the desired color
+		 * @param probability  the probability of the color appearing in the effect
+		 * @return  a new <code>Color</code>
+		 */
+		public static Color fromRGB(int red, int green,
+				int blue, double probability)
+		{
+			float[] hsb = new float[3];
+			java.awt.Color.RGBtoHSB(red, green, blue, hsb);
+			Color color = new Color();
+			color.hue = (int)(hsb[0] * 360);
+			color.saturation = (int)(hsb[1] * 100);
+			color.brightness = (int)(hsb[2] * 100);
+			color.probability = probability;
+			return color;
 		}
 		
 		/**
@@ -850,156 +906,75 @@ public class Effect
 	}
 	
 	/**
-	 * A small helper class for creating and managing
-	 * complex <code>custom</code>-type effects.
+	 * Stores an frame's RGBW color and transition time.
 	 */
-	public static class Animation
+	public static class Frame
 	{
-		private Aurora.Panel[] panels;
-		private Map<Integer, List<Frame>> frames;
-		private Aurora controller;
+		private int r, g, b, w, t;
 		
 		/**
-		 * Creates a new instance of an <code>Animation</code>.
-		 * @param controller  the desired Aurora controller
-		 * @throws UnauthorizedException  if the Aurora access token is invalid
+		 * Creates a new instance of a <code>Frame</code>.
+		 * @param red  the red RGBW value of the frame's color
+		 * @param green  the green RGBW value of the frame's color
+		 * @param blue  the blue RGBW value of the frame's color
+		 * @param white  the white RGBW value of the frame's color
+		 * @param transitionTime  the duration of transition between
+		 * 						  the previous frame and this frame
 		 */
-		public Animation(Aurora controller)
-				throws StatusCodeException, UnauthorizedException
+		public Frame(int red, int green,
+				int blue, int white, int transitionTime)
 		{
-			this.controller = controller;
-			panels = controller.panelLayout().getPositionData();
-			frames = new HashMap<Integer, List<Frame>>();
-			for (Aurora.Panel panel : panels)
-				frames.put(panel.getId(), new ArrayList<Frame>());
+			this.r = red;
+			this.g = green;
+			this.b = blue;
+			this.w = white;
+			this.t = transitionTime;
 		}
 		
 		/**
-		 * Creates a new <code>custom</code>-type effect
-		 * using the animation data from the <code>Animation</code>.
-		 * @param effectName  the desired effect name
-		 * @param loop  whether or not the effect will loop
-		 * @return  a new <code>custom</code>-type effect
-		 * @throws UnauthorizedException  if the access token is invalid
+		 * Gets the red RGBW value of the frame's color.
+		 * @return  the frame's red value
 		 */
-		public Effect createAnimation(String effectName, boolean loop)
-				throws StatusCodeException, UnauthorizedException
+		public int getRed()
 		{
-			int numPanels = this.controller.panelLayout().getNumPanels(false);
-			StringBuilder data = new StringBuilder();
-			data.append(numPanels);
-			for (int i = 0; i < panels.length; i++)
-			{
-				Aurora.Panel panel = panels[i];
-				int numFrames = frames.get(panel.getId()).size();
-				data.append(" " + panel.getId() + " " + numFrames);
-				
-				for (int j = 0; j < numFrames; j++)
-				{
-					Frame frame = frames.get(panel.getId()).get(j);
-					data.append(" " +
-								frame.getRed() + " " +
-								frame.getGreen() + " " +
-								frame.getBlue() + " " +
-								frame.getWhite() + " " +
-								frame.getTransitionTime());
-				}
-			}
-			
-			return Effect.createCustomEffect(effectName, data.toString(), loop);
+			return this.r;
 		}
 		
 		/**
-		 * Add a new frame (RGBW color and transition time) to the animation.
-		 * @param panel  the panel to add the frame to
-		 * @param frame  the RGBW color and transition time
+		 * Gets the green RGBW value of the frame's color.
+		 * @return  the frame's green value
 		 */
-		public void addFrame(Aurora.Panel panel, Frame frame)
+		public int getGreen()
 		{
-			this.frames.get(panel.getId()).add(frame);
+			return this.g;
 		}
 		
 		/**
-		 * Removes a frame (RGBW color and transition time) from the animation.
-		 * @param panel  the panel to add to add the frame to
-		 * @param frame  the RGBW color and transition time
+		 * Gets the blue RGBW value of the frame's color.
+		 * @return  the frame's blue value
 		 */
-		public void removeFrame(Aurora.Panel panel, Frame frame)
+		public int getBlue()
 		{
-			this.frames.get(panel).remove(frame);
+			return this.b;
 		}
 		
 		/**
-		 * Stores an frame's RGBW color and transition time.
+		 * Gets the white RGBW value of the frame's color.
+		 * @return  the frame's white value
 		 */
-		public static class Frame
+		public int getWhite()
 		{
-			private int r, g, b, w, t;
-			
-			/**
-			 * Creates a new instance of a <code>Frame</code>.
-			 * @param red  the red RGBW value of the frame's color
-			 * @param green  the green RGBW value of the frame's color
-			 * @param blue  the blue RGBW value of the frame's color
-			 * @param white  the white RGBW value of the frame's color
-			 * @param transitionTime  the duration of transition between
-			 * 						  the previous frame and this frame
-			 */
-			public Frame(int red, int green,
-					int blue, int white, int transitionTime)
-			{
-				this.r = red;
-				this.g = green;
-				this.b = blue;
-				this.w = white;
-				this.t = transitionTime;
-			}
-			
-			/**
-			 * Gets the red RGBW value of the frame's color.
-			 * @return  the frame's red value
-			 */
-			public int getRed()
-			{
-				return this.r;
-			}
-			
-			/**
-			 * Gets the green RGBW value of the frame's color.
-			 * @return  the frame's green value
-			 */
-			public int getGreen()
-			{
-				return this.g;
-			}
-			
-			/**
-			 * Gets the blue RGBW value of the frame's color.
-			 * @return  the frame's blue value
-			 */
-			public int getBlue()
-			{
-				return this.b;
-			}
-			
-			/**
-			 * Gets the white RGBW value of the frame's color.
-			 * @return  the frame's white value
-			 */
-			public int getWhite()
-			{
-				return this.w;
-			}
-			
-			/**
-			 * Gets the transition time of this frame (the duration of
-			 * transition between the previous frame and this frame).
-			 * @return  the frame's transition time
-			 */
-			public int getTransitionTime()
-			{
-				return this.t;
-			}
+			return this.w;
+		}
+		
+		/**
+		 * Gets the transition time of this frame (the duration of
+		 * transition between the previous frame and this frame).
+		 * @return  the frame's transition time
+		 */
+		public int getTransitionTime()
+		{
+			return this.t;
 		}
 	}
 }

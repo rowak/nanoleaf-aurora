@@ -1,7 +1,7 @@
 package io.github.rowak;
 
 /**
- * A base exception to parent the implementations.
+ * A generic exception for an HTTP request error.
  */
 public class StatusCodeException extends Exception
 {

@@ -1,6 +1,10 @@
 package io.github.rowak;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.util.Random;
 
 import org.json.JSONArray;
@@ -8,7 +12,6 @@ import org.json.JSONObject;
 
 import com.github.kevinsawicki.http.HttpRequest;
 
-import io.github.rowak.Effect.Color;
 import io.github.rowak.StatusCodeException.ResourceNotFoundException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.StatusCodeException.UnprocessableEntityException;
@@ -32,6 +35,7 @@ public class Aurora
 	private Effects effects;
 	private PanelLayout panelLayout;
 	private Rhythm rhythm;
+	private ExternalStreaming externalStreaming;
 	
 	/**
 	 * Creates a new instance of the Aurora controller.
@@ -83,6 +87,7 @@ public class Aurora
 		this.effects = new Effects();
 		this.panelLayout = new PanelLayout();
 		this.rhythm = new Rhythm();
+		this.externalStreaming = new ExternalStreaming();
 		
 		HttpRequest req = HttpRequest.get(getURL(""));
 		int code = req.code();
@@ -170,6 +175,16 @@ public class Aurora
 	public Rhythm rhythm()
 	{
 		return this.rhythm;
+	}
+	
+	/**
+	 * Returns the Aurora's <code>ExternalStreaming</code> object which contains
+	 * methods for controlling the external streaming feature of the Aurora.
+	 * @return  the Aurora's <code>ExternalStreaming</code> object
+	 */
+	public ExternalStreaming externalStreaming()
+	{
+		return this.externalStreaming;
 	}
 	
 	/**
@@ -687,7 +702,7 @@ public class Aurora
 		}
 		
 		/**
-		 * 
+		 * Sets the color of a single panel on the Aurora.
 		 * @param panel  the target panel
 		 * @param red  the red RGB value
 		 * @param green  the green RGB value
@@ -713,7 +728,7 @@ public class Aurora
 		}
 		
 		/**
-		 * 
+		 * Sets the color of a single panel on the Aurora.
 		 * @param panel  the target panel
 		 * @param hexColor  the desired hex color
 		 * @return  200 OK, 204 No Content,
@@ -729,6 +744,51 @@ public class Aurora
 		{
 			java.awt.Color color = java.awt.Color.decode(hexColor);
 			return setPanelColor(panel, color.getRed(), color.getGreen(), color.getBlue());
+		}
+		
+		/**
+		 * Sets the color of a single panel on the Aurora.
+		 * @param panelId  the target panel id
+		 * @param red  the red RGB value
+		 * @param green  the green RGB value
+		 * @param blue  the blue RGB value
+		 * @return  200 OK, 204 No Content,
+		 * 			401 Unauthorized, 422 UnprocessableEntityException)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws UnprocessableEntityException  if the <code>panelId</code> is not valid
+		 * 										 or if the <code>red</code>, <code>green</code>,
+		 * 										 or <code>blue</code> values are invalid (must be
+		 * 										 0 &#60; x &#60; 255)
+		 */
+		public int setPanelColor(int panelId, int red, int green, int blue)
+				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
+		{
+			Effect custom = new Effect();
+			custom.setVersion("1.0");
+			custom.setAnimType(Effect.Type.CUSTOM);
+			custom.setAnimData("1 " + panelId +
+					" 1 " + red + " " + green + " " + blue + " 0 20");
+			custom.setLoop(false);
+			return previewEffect(custom);
+		}
+		
+		/**
+		 * Sets the color of a single panel on the Aurora.
+		 * @param panelId  the target panel id
+		 * @param hexColor  the desired hex color
+		 * @return  200 OK, 204 No Content,
+		 * 			401 Unauthorized, 422 UnprocessableEntityException)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws UnprocessableEntityException  if the <code>panelId</code> is not valid
+		 * 										 or if the <code>red</code>, <code>green</code>,
+		 * 										 or <code>blue</code> values are invalid (must be
+		 * 										 0 &#60; x &#60; 255)
+		 */
+		public int setPanelColor(int panelId, String hexColor)
+				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
+		{
+			java.awt.Color color = java.awt.Color.decode(hexColor);
+			return setPanelColor(panelId, color.getRed(), color.getGreen(), color.getBlue());
 		}
 		
 		/**
@@ -1001,6 +1061,90 @@ public class Aurora
 			int y = json.getInt("y");
 			int o = json.getInt("o");
 			return new Position(x, y, o);
+		}
+	}
+	
+	/**
+	 * Contains methods for controlling the external streaming
+	 * feature on the Aurora.
+	 */
+	public class ExternalStreaming
+	{
+		/**
+		 * Enables external streaming mode over UDP.
+		 * @return the <code>SocketAddress</code> of the streaming controller
+		 * @throws UnauthorizedException  if the access token is invalid
+		 */
+		public InetSocketAddress enable() throws StatusCodeException
+		{
+			String body = "{\"write\": {\"command\": \"display\", \"animType\": \"extControl\"}}";
+			HttpRequest req = HttpRequest.put(getURL("effects")).send(body);
+			checkStatusCode(req.code());
+			JSONObject response = new JSONObject(req.body());
+			String host = response.getString("streamControlIpAddr");
+			int port = response.getInt("streamControlPort");
+			return new InetSocketAddress(host, port);
+		}
+		
+		/**
+		 * Sends a series of frames to the target Aurora.
+		 * <b>Requires external streaming to be enabled. Enable it
+		 * using the {@link #enable()} method.</b>
+		 * @param effect  the custom effect to be sent to the Aurora
+		 * @param target  the address of the target Aurora
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws SocketException  if the target Aurora cannot be found or connected to
+		 * @throws IOException  if an I/O error occurs
+		 */
+		public void sendStaticEffect(Effect effect,
+				InetSocketAddress target) throws StatusCodeException,
+					UnauthorizedException, SocketException, IOException
+		{
+			sendAnimData(effect.getAnimData(), target);
+		}
+		
+		/**
+		 * Sends a static animation data string to the target Aurora.<br>
+		 * <b>Note: Requires external streaming to be enabled. Enable it
+		 * using the {@link #enable()} method.</b>
+		 * @param animData  the static animation data to be sent to the Aurora
+		 * @param target  the address of the target Aurora
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws SocketException  if the target Aurora cannot be found or connected to
+		 * @throws IOException  if an I/O error occurs
+		 */
+		public void sendAnimData(String animData,
+				InetSocketAddress target) throws StatusCodeException,
+					UnauthorizedException, SocketException, IOException
+		{
+			byte[] data = animDataToBytes(animData);
+			
+			DatagramPacket packet = new DatagramPacket(data,
+					data.length, target.getAddress(), target.getPort());
+			
+			try
+			{
+				DatagramSocket socket = new DatagramSocket();
+				socket.send(packet);
+				socket.close();
+			}
+			catch (SocketException se)
+			{
+				throw new SocketException("Failed to connect to target Aurora.");
+			}
+			catch (IOException ioe)
+			{
+				throw new IOException("I/O error.");
+			}
+		}
+		
+		private byte[] animDataToBytes(String animData)
+		{
+			String[] dataStr = animData.split(" ");
+			byte[] dataBytes = new byte[dataStr.length];
+			for (int i = 0; i < dataStr.length; i++)
+				dataBytes[i] = (byte)Integer.parseInt(dataStr[i]);
+			return dataBytes;
 		}
 	}
 	

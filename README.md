@@ -97,6 +97,9 @@ boolean active = aurora.rhythm().getActive();              // whether or not the
 boolean auxAvailable = aurora.rhythm().getAuxAvailable();  // whether of not the aux (3.5mm) input is available
 ```
 
+### External Streaming
+External streaming is an advanced feature that allows for continuous updating of the Aurora panels by sending UDP packets. External streaming can be enabled using the method ```Aurora.ExternalStreaming.enable()```. Static animation data can be sent to the Aurora using the method ```Aurora.ExternalStreaming.sendAnimData()```. Effects (with animation data) can also be sent using the method ```Aurora.ExternalStreaming.sendStaticEffect()```. *Note that these methods do not return anything. If the data sent is invalid, the server will not send any kind of response*.
+
 ## The ```Effect``` Class
 The ```Effect``` class is a helper class for parsing raw effect json data received from the Aurora into a **local** object. This allows for easier reading from and writing to effects, and helps make creating new effects much easier. The Aurora class implements these methods where necessary by default so you don't have call them yourself.
 Note: The instance variables in ```Effect``` objects are not all used by certain effect types. Attempting to get these variables will either result in ```-1``` (int/double) or ```null``` (String/Color[]). Use the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) as a reference when working with ```Effect``` objects.
@@ -110,19 +113,21 @@ aurora.effects().addEffect(effect);                       // uploads the modifie
 ### Warning
 Changing json data on your Aurora can cause effects to break if you attempt to change certain properties (that shouldn't be changed) or json structure. If your Nanoleaf app suddenly starts crashing, force stop the app (Android) or restart your device (iOS) to return the app to a stable state. I came across this multiple times while messing around with the api. Refer to the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) for more information about effects and their properties.
 
-## The ```Effect.Animation``` Class
-The ```Animation``` class (located in the ```Effect``` class) is a more advanced helper class that assists in the creation of ```custom```-type effects. Animation frames are added to the animation object using the ```Effect.Animation.addFrame()``` method. This method adds a frame for only **one** panel at a time. Once all of the frames have been defined, an ```Effect``` object can be built from the animation object using the ```Effect.Animation.createAnimation()``` method.
-### Example
+## Effect Builders
+Effect builders are small helper classes that assist in creating effects programatically. These classes implement the ```EffectBuilder``` interface except for the ```CustomEffectBuilder``` and the ```StaticEffectBuilder```.
+### The ```CustomEffectBuilder```
+The ```CustomEffectBuilder``` class is a more advanced helper class that assists in the creation of ```custom```-type effects. Animation frames are added to the builder object using the ```CustomEffectBuilder.addFrame()``` method. This method adds a frame for only **one** panel at a time. Once all of the frames have been defined, an ```Effect``` object can be built from the animation object using the ```CustomEffectBuilder.build()``` method.
+#### Example
 ```Java
-Panel[] panels = aurora.panelLayout().getPositionData();     // creates a new array of type Panel, containing all of the connected Panel data
-Animation anim = new Animation(aurora);                      // creates an instance of the animation object
+Panel[] panels = aurora.panelLayout().getPositionData();        // creates a new array of type Panel, containing all of the connected Panel data
+CustomEffectBuilder builder = new CustomEffectBuilder(aurora);  // creates an instance of the effect builder object
 for (Panel panel : panels)
 {
-  anim.addFrame(panel, new Frame(255, 0, 255, 0, 20));       // add a new frame to the animation (for each panel). Frame takes 5 arguments: red, green, blue, white, and transitionTime
-  anim.addFrame(panel, new Frame(0, 255, 255, 0, 20));       // add a new frame to the animation (for each panel). Frame takes 5 arguments: red, green, blue, white, and transitionTime
+  builder.addFrame(panel, new Frame(255, 0, 255, 0, 20));       // add a new frame to the animation (for each panel). Frame takes 5 arguments: red, green, blue, white, and transitionTime
+  builder.addFrame(panel, new Frame(0, 255, 255, 0, 20));       // add a new frame to the animation (for each panel). Frame takes 5 arguments: red, green, blue, white, and transitionTime
 }
-Effect effect = anim.createAnimation("My Animation", true);  // builds the animation data and saves it to a new custom-type effect
-aurora.effects().addEffect(effect);                          // uploads the new effect to the Aurora
+Effect effect = builder.build("My Animation", true);            // builds the animation data and saves it to a new custom-type effect
+aurora.effects().addEffect(effect);                             // uploads the new effect to the Aurora
 ```
 
 ## StatusCodeExceptions

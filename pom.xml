@@ -53,6 +53,7 @@
         <configuration>
           <sourceFileIncludes>
             <include>io/github/rowak/*.java</include>
+			<include>io/github/rowak/effectbuilder/*.java</include>
           </sourceFileIncludes>
         </configuration>
       </plugin>

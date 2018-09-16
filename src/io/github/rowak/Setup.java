@@ -20,7 +20,7 @@ import io.github.rowak.StatusCodeException.InternalServerErrorException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 
 /**
- * A utility class that makes getting started with the API easier.
+ * A utility class with useful Aurora management methods.
  */
 public class Setup
 {
