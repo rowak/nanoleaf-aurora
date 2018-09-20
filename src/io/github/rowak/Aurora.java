@@ -251,29 +251,13 @@ public class Aurora
 	public class State
 	{
 		/**
-		 * Stores a local copy of the <i>on</i> state of the Aurora.
-		 */
-		private boolean on;
-		
-		/**
-		 * Initializes this <code>State</code> object by
-		 * requesting the Aurora's <code>on</code> value.
-		 * @throws UnauthorizedException  if the access token is invalid
-		 */
-		public State() throws StatusCodeException
-		{
-			getOn();
-		}
-		
-		/**
 		 * Gets the on state of the Aurora (true = on, false = off).
 		 * @return true, if the Aurora is on
 		 * @throws UnauthorizedException  if the access token is invalid
 		 */
 		public boolean getOn() throws StatusCodeException
 		{
-			on = Boolean.parseBoolean(HttpRequest.get(getURL("state/on/value")).body());
-			return on;
+			return Boolean.parseBoolean(HttpRequest.get(getURL("state/on/value")).body());
 		}
 		
 		/**
@@ -287,8 +271,6 @@ public class Aurora
 		{
 			String body = String.format("{\"on\": {\"value\": %b}}", on);
 			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
-			if (req.code() == 200)
-				this.on = on;
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -300,7 +282,7 @@ public class Aurora
 		 */
 		public int toggleOn() throws StatusCodeException, UnauthorizedException
 		{
-			return setOn(!on);
+			return setOn(!this.getOn());
 		}
 		
 		/**

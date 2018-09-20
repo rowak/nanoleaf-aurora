@@ -34,7 +34,7 @@ public class Effect
 	private String direction;
 	
 	/**
-	 * The availbale animation types.<br>
+	 * The availbale effect types.<br>
 	 * <b>Note: The <i>plugin</i> type is for user-made
 	 * plugin effect types.</b>
 	 */
@@ -44,6 +44,11 @@ public class Effect
 		RANDOM, FADE, STATIC, CUSTOM, PLUGIN
 	}
 	
+	/**
+	 * The available effect direction types.<br>
+	 * <b>Note: If a direction is missing, please
+	 * create an issue on <a href = "https://github.com/rowak/nanoleaf-aurora/issues">Github.</a></b>
+	 */
 	public enum Direction
 	{
 		LEFT, RIGHT, UP, DOWN, OUTWARDS
