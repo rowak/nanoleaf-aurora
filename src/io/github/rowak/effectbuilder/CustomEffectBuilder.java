@@ -30,7 +30,7 @@ public class CustomEffectBuilder
 			throws StatusCodeException, UnauthorizedException
 	{
 		this.controller = controller;
-		panels = controller.panelLayout().getPositionData();
+		panels = controller.panelLayout().getPanels();
 		frames = new HashMap<Integer, List<Frame>>();
 		for (Aurora.Panel panel : panels)
 			frames.put(panel.getId(), new ArrayList<Frame>());

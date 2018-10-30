@@ -28,7 +28,7 @@ public class StaticEffectBuilder
 	public StaticEffectBuilder(Aurora controller)
 			throws StatusCodeException, UnauthorizedException
 	{
-		panels = controller.panelLayout().getPositionData();
+		panels = controller.panelLayout().getPanels();
 		frames = new HashMap<Integer, Frame>();
 	}
 	

@@ -9,7 +9,7 @@
 
   <groupId>io.github.rowak</groupId>
   <artifactId>nanoleaf-aurora</artifactId>
-  <version>1.11</version>
+  <version>1.12</version>
 
   <distributionManagement>
     <snapshotRepository>
