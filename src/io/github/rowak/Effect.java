@@ -1,5 +1,8 @@
 package io.github.rowak;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,25 +16,24 @@ import io.github.rowak.StatusCodeException.UnprocessableEntityException;
  */
 public class Effect
 {
-	private String name;
-	private String version;
-	private boolean loop;
-	private Color[] palette;
-	private int transTime = -1, 
-			maxTransTime = -1, minTransTime = -1;
-	private int windowSize = -1;
-	private double flowFactor = -1;
-	private int delayTime = -1,
-			maxDelayTime = -1, minDelayTime = -1;
-	private String colorType;
-	private Effect.Type animType;
-	private String pluginType;
-	private String pluginUuid;
-	private String animData;
-	private double explodeFactor = -1;
-	private int maxBrightness = -1,
-			minBrightness = -1;
-	private String direction;
+	/**
+	 * The names of the available effect properties.
+	 * <br><b>Note: Plugin options are not fully supported by the api.
+	 * They can still be accessed and modified however using the
+	 * {@link #getPluginOptions()} method.</b>
+	 */
+	private static final String[] PROPERTIES_NAMES =
+		{
+			"animName", "version", "animData", "palette", "transTime",
+			"windowSize", "flowFactor", "delayTime", "loop",
+			"colorType", "animType", "pluginType", "pluginUuid",
+			"pluginOptions", "explodeFactor", "brightnessRange",
+			"direction", "loop"
+		};
+	/**
+	 * The stored properties for the local effect object.
+	 */
+	private Map<Object, Object> properties;
 	
 	/**
 	 * The availbale effect types.<br>
@@ -47,17 +49,22 @@ public class Effect
 	/**
 	 * The available effect direction types.<br>
 	 * <b>Note: If a direction is missing, please
-	 * create an issue on <a href = "https://github.com/rowak/nanoleaf-aurora/issues">Github.</a></b>
+	 * create an issue on <a href =
+	 * "https://github.com/rowak/nanoleaf-aurora/issues">Github.</a></b>
 	 */
 	public enum Direction
 	{
 		LEFT, RIGHT, UP, DOWN, OUTWARDS
 	}
 	
+	public Effect()
+	{
+		this.properties = new HashMap<Object, Object>();
+	}
+	
 	/**
-	 * Parse the <code>Effect</code> data from
-	 * the raw <code>JSON</code> data into
-	 * a new <code>Effect</code> object.
+	 * Parse the <code>Effect</code> data from the raw <code>JSON</code>
+	 * data into a new <code>Effect</code> object.
 	 * @param json  the <code>JSON</code> data to convert
 	 * @return  a new <code>Effect</code> equivalent
 	 * 			to the <code>JSON</code> data
@@ -66,120 +73,12 @@ public class Effect
 	{
 		JSONObject data = new JSONObject(json);
 		Effect ef = new Effect();
-		ef.name = data.getString("animName");
-		ef.version = data.getString("version");
-		ef.animType = Effect.Type.valueOf(data.getString("animType").toUpperCase());
-		ef.colorType = data.getString("colorType");
-		
-		try
+		ef.properties = new HashMap<Object, Object>();
+		for (String property : Effect.PROPERTIES_NAMES)
 		{
-			ef.animData = data.getString("animData");
-		}
-		catch (JSONException je)
-		{
-			ef.animData = null;
-		}
-		
-		JSONArray arr = data.getJSONArray("palette");
-		ef.palette = new Color[arr.length()];
-		for (int i = 0; i < arr.length(); i++)
-		{
-			JSONObject colors = arr.getJSONObject(i);
-			int hue = colors.getInt("hue");
-			int sat = colors.getInt("saturation");
-			int brightness = colors.getInt("brightness");
-//			ef.palette[i] = new Effect().new Color(hue,
-//					sat, brightness);
-			ef.palette[i] = Effect.Color.fromHSB(hue,
-					sat, brightness);
-			try
+			if (data.has(property))
 			{
-				double probability = colors.getDouble("probability");
-				ef.palette[i].setProbability(probability);
-			}
-			catch (JSONException je)
-			{
-				ef.palette[i].setProbability(-1);
-			}
-		}
-		
-		if (ef.version.equals("2.0") && ef.animType.equals(Effect.Type.PLUGIN))
-		{
-			JSONArray options = data.getJSONArray("pluginOptions");
-			for (int i = 0; i < options.length(); i++)
-			{
-				JSONObject plugin = options.getJSONObject(i);
-				String pluginName = plugin.getString("name");
-				if (pluginName.equals("loop"))
-					ef.loop = plugin.getBoolean("value");
-				else if (pluginName.equals("transTime"))
-					ef.transTime = plugin.getInt("value");
-				else if (pluginName.equals("delayTime"))
-					ef.delayTime = plugin.getInt("value");
-			}
-			ef.pluginType = data.getString("pluginType");
-			ef.pluginUuid = data.getString("pluginUuid");
-		}
-		else
-		{
-			try
-			{
-				JSONObject transTime = data.getJSONObject("transTime");
-				ef.maxTransTime = transTime.getInt("maxValue");
-				ef.minTransTime = transTime.getInt("minValue");
-			}
-			catch (JSONException je)
-			{
-				ef.maxTransTime = -1;
-				ef.minTransTime = -1;
-			}
-			if (ef.animType.equals(Effect.Type.WHEEL))
-				ef.windowSize = data.getInt("windowSize");
-			else
-				ef.windowSize = -1;
-			if (ef.animType.equals(Effect.Type.FLOW))
-				ef.flowFactor = data.getInt("flowFactor");
-			else
-				ef.flowFactor = -1.0;
-			try
-			{
-				JSONObject delayTime = data.getJSONObject("delayTime");
-				ef.maxDelayTime = delayTime.getInt("maxValue");
-				ef.minDelayTime = delayTime.getInt("minValue");
-			}
-			catch (JSONException je)
-			{
-				ef.maxDelayTime = -1;
-				ef.minDelayTime = -1;
-			}
-			if (ef.animType.equals(Effect.Type.EXPLODE))
-				ef.explodeFactor = data.getDouble("explodeFactor");
-			else
-				ef.explodeFactor = -1;
-			try
-			{
-				JSONObject brightnessRange = data.getJSONObject("brightnessRange");
-				ef.maxBrightness = brightnessRange.getInt("maxValue");
-				ef.minBrightness = brightnessRange.getInt("minValue");
-			}
-			catch (JSONException je)
-			{
-				ef.maxBrightness = -1;
-				ef.minBrightness = -1;
-			}
-			if (ef.animType.equals(Effect.Type.FLOW) ||
-				ef.animType.equals(Effect.Type.EXPLODE) ||
-				ef.animType.equals(Effect.Type.WHEEL))
-			{
-				ef.direction = data.getString("direction");
-			}
-			try
-			{
-				ef.loop = data.getBoolean("loop");
-			}
-			catch (JSONException je)
-			{
-				
+				ef.properties.put(property, data.get(property));
 			}
 		}
 		final Effect effect = ef;
@@ -192,97 +91,33 @@ public class Effect
 	 * {@link Aurora.Effects#writeEffect(String)} method, to upload a
 	 * local <code>Effect</code> to the Aurora.
 	 * @param writeCommand  the command prepended to the <code>JSON</code> data to
-	 * 						prepare it for the <code>Aurora.addEffect()</code> method.
+	 * 						prepare it for the <code>Aurora.Effects.addEffect()</code> method.
 	 * 						Set to <code>null</code> to <u>not</u> add a write command
 	 * 						to the <code>JSON</code> data
 	 * @return  the <code>Effect</code> in <code>JSON</code> format
 	 */
 	public String toJSON(String writeCommand)
 	{
-		StringBuilder json = new StringBuilder();
-		json.append("{");
+		JSONObject json = new JSONObject();
 		if (writeCommand != null && writeCommand != "")
-			json.append("\"command\":\"" + writeCommand + "\",");
-		if (this.animType.equals(Effect.Type.WHEEL))
-			json.append("\"version\":\"" + this.version + "\",");
-		json.append("\"animName\":\"" + this.name + "\",");
+			json.put("command", writeCommand);
 		
-		String animType = this.animType.name().toLowerCase();
+		for (Object key : properties.keySet())
+		{
+			Object value = properties.get(key);
+			json.put((String)key, value);
+		}
 		
-		if (!this.animType.equals(Effect.Type.CUSTOM) &&
-			!this.animType.equals(Effect.Type.STATIC) &&
-			!this.animType.equals(Effect.Type.PLUGIN))
-		{
-			json.append("\"animType\":\"" + animType + "\",");
-			json.append("\"colorType\":\"" + this.colorType + "\",");
-			if (!this.animType.equals(Effect.Type.FLOW) &&
-				!this.animType.equals(Effect.Type.EXPLODE))
-			{
-				json.append("\"animData\":" + this.animData + ",");
-			}
-			json.append("\"palette\":" + paletteToJSON(this.palette) + ",");
-			
-			if (this.animType.equals(Effect.Type.FLOW))
-			{
-				json.append("\"transTime\":{\"maxValue\":" +
-						this.maxTransTime + ",\"minValue\":" + this.minTransTime + "},");
-				json.append("\"delayTime\":{\"maxValue\":" +
-						this.maxDelayTime + ",\"minValue\":" + this.minDelayTime + "},");
-				json.append("\"flowFactor\":" + this.flowFactor + ",");
-				json.append("\"direction\":\"" + this.direction + "\",");
-				json.append("\"loop\":" + this.loop + "}");
-			}
-			else if (this.animType.equals(Effect.Type.EXPLODE))
-			{
-				json.append("\"transTime\":{\"maxValue\":" +
-						this.maxTransTime + ",\"minValue\":" + this.minTransTime + "},");
-				json.append("\"delayTime\":{\"maxValue\":" +
-						this.maxDelayTime + ",\"minValue\":" + this.minDelayTime + "},");
-				json.append("\"explodeFactor\":" + this.explodeFactor + ",");
-				json.append("\"direction\":\"" + this.direction + "\",");
-				json.append("\"loop\":" + this.loop + "}");
-			}
-			else if (this.animType.equals(Effect.Type.WHEEL))
-			{
-				json.append("\"transTime\":{\"maxValue\":" +
-						this.maxTransTime + ",\"minValue\":" + this.minTransTime + "},");
-				json.append("\"windowSize\":\"" + this.windowSize + "\",");
-				json.append("\"direction\":\"" + this.direction + "\",");
-				json.append("\"loop\":" + this.loop + "}");
-			}
-			else if (this.animType.equals(Effect.Type.HIGHLIGHT) ||
-					 this.animType.equals(Effect.Type.RANDOM) ||
-					 this.animType.equals(Effect.Type.FADE))
-			{
-				json.append("\"brightnessRange\":{\"maxValue\":" +
-						this.maxBrightness + ",\"minValue\":" + this.minBrightness + "},");
-				json.append("\"transTime\":{\"maxValue\":" +
-						this.maxTransTime + ",\"minValue\":" + this.minTransTime + "},");
-				json.append("\"delayTime\":{\"maxValue\":" +
-						this.maxDelayTime + ",\"minValue\":" + this.minDelayTime + "},");
-				json.append("\"loop\":" + this.loop + "}");
-			}
-		}
-		else if (this.animType.equals(Effect.Type.CUSTOM) ||
-				this.animType.equals(Effect.Type.STATIC))
-		{
-			json.append("\"animType\":\"" + animType + "\",");
-			json.append("\"animData\":\"" + this.animData + "\",");
-			json.append("\"loop\":" + this.loop + "}");
-		}
-		else
-		{
-			json.append("\"palette\":" + paletteToJSON(this.palette) + ",");
-			json.append("\"version\":\"" + this.version + "\",");
-			json.append("\"colorType\":\"" + this.colorType + "\",");
-			json.append("\"pluginUuid\":\"" + this.pluginUuid + "\",");
-			json.append("\"animType\":\"" + animType + "\",");
-			json.append("\"pluginOptions\":[{\"name\":\"loop\", \"value\":" + this.loop + "}," +
-						"{\"name\":\"transTime\",\"value\":" + this.transTime + "}," +
-						"{\"name\":\"delayTime\",\"value\":" + this.delayTime + "}],");
-			json.append("\"pluginType\":\"" + this.pluginType + "\"}");
-		}
 		return json.toString();
+	}
+	
+	/**
+	 * Properly convert an effect object to <code>JSON</code> format.
+	 * @return  the <code>Effect</code> in <code>JSON</code> format
+	 */
+	public String toJSON()
+	{
+		return toJSON(null);
 	}
 	
 	/**
@@ -298,7 +133,8 @@ public class Effect
 	 */
 	public static Effect createStaticEffect(String effectName,
 			Aurora.Panel[] panels, Aurora controller)
-					throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
+					throws StatusCodeException, UnauthorizedException,
+					UnprocessableEntityException
 	{
 		Effect ef = new Effect();
 		ef.setName(effectName);
@@ -318,7 +154,7 @@ public class Effect
 							panel.getWhite() + " " +
 							0);
 		}
-				
+		
 		ef.setAnimData(animData.toString());
 		ef.setLoop(false);
 		return ef;
@@ -364,30 +200,50 @@ public class Effect
 	}
 	
 	/**
+	 * Gets the <code>Map</code> of properties belonging to the effect.
+	 * @return  the properties of the effect
+	 */
+	public Map<Object, Object> getProperties()
+	{
+		return this.properties;
+	}
+	
+	/**
+	 * Gets an array of plugin options that are not supported by the api.
+	 * <br><b>Note: Plugin options are only available for pre-existing version
+	 * 2.0 plugin-type effects.</b>
+	 * @return  a <code>JSONArray</code> containing the effect pluginOptions
+	 */
+	public JSONArray getPluginOptions()
+	{
+		return (JSONArray)this.properties.get("pluginOptions");
+	}
+	
+	/**
 	 * Gets the name of the effect.
 	 * @return  the name of the effect (or null if not set)
 	 */
 	public String getName()
 	{
-		return this.name;
+		return (String)this.properties.get("animName");
 	}
 	
 	/**
 	 * Sets the name of the effect.
-	 * @param name  the desired name
+	 * @param name  the name of the effect
 	 */
 	public void setName(String name)
 	{
-		this.name = name;
+		this.properties.put("animName", name);
 	}
 	
 	/**
 	 * Gets the version of the effect.
-	 * @return  the version of the effect
+	 * @return  the version of the effect (or null if not set)
 	 */
 	public String getVersion()
 	{
-		return this.version;
+		return (String)this.properties.get("version");
 	}
 	
 	/**
@@ -396,16 +252,16 @@ public class Effect
 	 */
 	public void setVersion(String version)
 	{
-		this.version = version;
+		this.properties.put("version", version);
 	}
 	
 	/**
 	 * Gets whether or not the effect will loop.
-	 * @return  true, if the effect will loop
+	 * @return  true, if the effect will loop (Note: returns false if not set)
 	 */
 	public boolean getLoop()
 	{
-		return this.loop;
+		return safeGetProperty("loop", Boolean.TYPE);
 	}
 	
 	/**
@@ -414,7 +270,7 @@ public class Effect
 	 */
 	public void setLoop(boolean loop)
 	{
-		this.loop = loop;
+		safeSetProperty("loop", loop);
 	}
 	
 	/**
@@ -423,7 +279,7 @@ public class Effect
 	 */
 	public Color[] getPalette()
 	{
-		return this.palette;
+		return jsonToPalette(safeGetProperty("palette", JSONArray.class));
 	}
 	
 	/**
@@ -432,25 +288,33 @@ public class Effect
 	 */
 	public void setPalette(Color[] palette)
 	{
-		this.palette = palette;
+		if (palette != null)
+		{
+			JSONArray arr = new JSONArray(palette);
+			for (Object o : arr)
+			{
+				JSONObject jobj = (JSONObject)o;
+				if (jobj.getDouble("probability") == -1.0)
+				{
+					jobj.remove("probability");
+				}
+			}
+			this.properties.put("palette", arr);
+		}
+		else
+		{
+			throw new NullPointerException("Cannot set null palette");
+		}
 	}
 	
 	/**
-	 * Gets the transition time of the effect.
-	 * @return  the transition time (or -1 if not set)
-	 */
-	public int getTransTime()
-	{
-		return this.transTime;
-	}
-	
-	/**
-	 * Sets the transition time of the effect.
+	 * Sets the total transition time of the effect (maximum and minimum).
 	 * @param transTime  the desired transition time
 	 */
 	public void setTransTime(int transTime)
 	{
-		this.transTime = transTime;
+		setMaxTransTime(transTime);
+		setMinTransTime(transTime);
 	}
 	
 	/**
@@ -459,7 +323,7 @@ public class Effect
 	 */
 	public int getMaxTransTime()
 	{
-		return this.maxTransTime;
+		return (Integer)safeGetMaxMinProperty("transTime", "maxValue");
 	}
 	
 	/**
@@ -468,7 +332,7 @@ public class Effect
 	 */
 	public void setMaxTransTime(int transTime)
 	{
-		this.maxTransTime = transTime;
+		safeSetMaxMinProperty("transTime", "maxValue", transTime);
 	}
 	
 	/**
@@ -477,7 +341,7 @@ public class Effect
 	 */
 	public int getMinTransTime()
 	{
-		return this.minTransTime;
+		return (Integer)safeGetMaxMinProperty("transTime", "minValue");
 	}
 	
 	/**
@@ -486,7 +350,7 @@ public class Effect
 	 */
 	public void setMinTransTime(int transTime)
 	{
-		this.minTransTime = transTime;
+		safeSetMaxMinProperty("transTime", "minValue", transTime);
 	}
 	
 	/**
@@ -495,7 +359,7 @@ public class Effect
 	 */
 	public int getWindowSize()
 	{
-		return this.windowSize;
+		return safeGetProperty("windowSize", Integer.class);
 	}
 	
 	/**
@@ -504,7 +368,7 @@ public class Effect
 	 */
 	public void setWindowSize(int size)
 	{
-		this.windowSize = size;
+		this.properties.put("windowSize", size);
 	}
 	
 	/**
@@ -513,34 +377,26 @@ public class Effect
 	 */
 	public double getFlowFactor()
 	{
-		return this.flowFactor;
+		return safeGetProperty("flowFactor", Double.class);
 	}
 	
 	/**
 	 * Sets the flow factor of the effect (flow effects only).
-	 * @param factor  the desired flow factor
+	 * @param factor  the flow factor
 	 */
 	public void setFlowFactor(double factor)
 	{
-		this.flowFactor = factor;
+		this.properties.put("flowFactor", factor);
 	}
 	
 	/**
-	 * Gets the delay time of the effect.
-	 * @return  the dely time of the effect (or -1 if not set)
-	 */
-	public int getDelayTime()
-	{
-		return this.delayTime;
-	}
-	
-	/**
-	 * Sets the delay time of the effect.
-	 * @param delay  the desired delay time
+	 * Sets the total delay time of the effect (maximum and minimum).
+	 * @param delay  the desired delay time between transitions
 	 */
 	public void setDelayTime(int delay)
 	{
-		this.delayTime = delay;
+		setMaxDelayTime(delay);
+		setMinDelayTime(delay);
 	}
 	
 	/**
@@ -549,16 +405,16 @@ public class Effect
 	 */
 	public int getMaxDelayTime()
 	{
-		return this.maxDelayTime;
+		return (Integer)safeGetMaxMinProperty("delayTime", "maxValue");
 	}
 	
 	/**
 	 * Sets the maximum delay time of the effect.
-	 * @param delay  the desired maximum delay time
+	 * @param delay  the maximum delay time between transitions
 	 */
 	public void setMaxDelayTime(int delay)
 	{
-		this.maxDelayTime = delay;
+		safeSetMaxMinProperty("delayTime", "maxValue", delay);
 	}
 	
 	/**
@@ -567,16 +423,16 @@ public class Effect
 	 */
 	public int getMinDelayTime()
 	{
-		return this.minDelayTime;
+		return (Integer)safeGetMaxMinProperty("delayTime", "minValue");
 	}
 	
 	/**
 	 * Sets the minimum delay time of the effect.
-	 * @param delay  the desired minimum delay time
+	 * @param delay  the minimum delay time between transitions
 	 */
 	public void setMinDelayTime(int delay)
 	{
-		this.minDelayTime = delay;
+		safeSetMaxMinProperty("delayTime", "minValue", delay);
 	}
 	
 	/**
@@ -585,16 +441,17 @@ public class Effect
 	 */
 	public String getColorType()
 	{
-		return this.colorType;
+		//return (String)safeGetProperty("colorType", "");
+		return safeGetProperty("colorType", String.class);
 	}
 	
 	/**
 	 * Sets the color type of the effect.
-	 * @param type  the desired color type
+	 * @param type  the color type of the effect
 	 */
 	public void setColorType(String type)
 	{
-		this.colorType = type;
+		this.properties.put("colorType", type);
 	}
 	
 	/**
@@ -603,16 +460,30 @@ public class Effect
 	 */
 	public Effect.Type getAnimType()
 	{
-		return this.animType;
+		String type = (String)this.properties.get("animType");
+		Effect.Type validType = null;
+		for (Effect.Type t : Effect.Type.values())
+		{
+			if (t.toString().toLowerCase().equals(type))
+				validType = t;
+		}
+		return validType;
 	}
 	
 	/**
 	 * Sets the animation type of the effect.
-	 * @param type  the desired animation type
+	 * @param type  the animation type
 	 */
 	public void setAnimType(Effect.Type type)
 	{
-		this.animType = type;
+		if (type != null)
+		{
+			this.properties.put("animType", type.toString().toLowerCase());
+		}
+		else
+		{
+			throw new NullPointerException("Cannot set null effect type");
+		}
 	}
 	
 	/**
@@ -621,16 +492,16 @@ public class Effect
 	 */
 	public String getPluginType()
 	{
-		return this.pluginType;
+		return safeGetProperty("pluginType", String.class);
 	}
 	
 	/**
 	 * Sets the plugin type of the effect.
-	 * @param type  the desired plugin type
+	 * @param type  the plugin type
 	 */
 	public void setPluginType(String type)
 	{
-		this.pluginType = type;
+		this.properties.put("pluginType", type);
 	}
 	
 	/**
@@ -639,16 +510,26 @@ public class Effect
 	 */
 	public double getExplodeFactor()
 	{
-		return this.explodeFactor;
+		return safeGetProperty("explodeFactor", Double.class);
 	}
 	
 	/**
 	 * Sets the explosion factor of the effect.
-	 * @param factor  the desired explosion factor
+	 * @param factor  the explosion factor
 	 */
 	public void setExplodeFactor(double factor)
 	{
-		this.explodeFactor = factor;
+		this.properties.put("explodeFactor", factor);
+	}
+	
+	/**
+	 * Sets the total brightness of the effect (maximum and minimum).
+	 * @param brightness  the brightness level of the effect
+	 */
+	public void setBrightness(int brightness)
+	{
+		setMaxBrightness(brightness);
+		setMinBrightness(brightness);
 	}
 	
 	/**
@@ -657,16 +538,16 @@ public class Effect
 	 */
 	public int getMaxBrightness()
 	{
-		return this.maxBrightness;
+		return (Integer)safeGetMaxMinProperty("brightnessRange", "maxValue");
 	}
 	
 	/**
 	 * Sets the maximum brightness of the effect.
-	 * @param brightness  the desired maximum brightness
+	 * @param brightness  the maximum brightness level
 	 */
 	public void setMaxBrightness(int brightness)
 	{
-		this.maxBrightness = brightness;
+		safeSetMaxMinProperty("brightnessRange", "maxValue", brightness);
 	}
 	
 	/**
@@ -675,34 +556,48 @@ public class Effect
 	 */
 	public int getMinBrightness()
 	{
-		return this.minBrightness;
+		return (Integer)safeGetMaxMinProperty("brightnessRange", "minValue");
 	}
 	
 	/**
 	 * Sets the minimum brightness of the effect.
-	 * @param brightness  the desired minimum brightness
+	 * @param brightness  the minimum brightness level
 	 */
 	public void setMinBrightness(int brightness)
 	{
-		this.minBrightness = brightness;
+		safeSetMaxMinProperty("brightnessRange", "minValue", brightness);
 	}
 	
 	/**
 	 * Gets the moving direction of the effect.
 	 * @return  the direction of the effect (or null if not set)
 	 */
-	public String getDirection()
+	public Effect.Direction getDirection()
 	{
-		return this.direction;
+		String direction = (String)this.properties.get("direction");
+		Effect.Direction validDirection = null;
+		for (Effect.Direction d : Effect.Direction.values())
+		{
+			if (d.toString().toLowerCase().equals(direction))
+				validDirection = d;
+		}
+		return validDirection;
 	}
 	
 	/**
 	 * Sets the moving direction of the effect.
-	 * @param direction  the desired direction
+	 * @param direction  the direction of motion of the effect
 	 */
-	public void setDirection(String direction)
+	public void setDirection(Effect.Direction direction)
 	{
-		this.direction = direction;
+		if (direction != null)
+		{
+			this.properties.put("direction", direction.toString().toLowerCase());
+		}
+		else
+		{
+			throw new NullPointerException("Cannot set null direction");
+		}
 	}
 	
 	/**
@@ -711,16 +606,16 @@ public class Effect
 	 */
 	public String getPluginUuid()
 	{
-		return this.pluginUuid;
+		return safeGetProperty("pluginUuid", String.class);
 	}
 	
 	/**
 	 * Sets the pluginUUID of the effect.
-	 * @param uuid  the desired UUID
+	 * @param uuid  the UUID for the plugin
 	 */
 	public void setPluginUuid(String uuid)
 	{
-		this.pluginUuid = uuid;
+		this.properties.put("pluginUuid", uuid);
 	}
 	
 	/**
@@ -729,7 +624,7 @@ public class Effect
 	 */
 	public String getAnimData()
 	{
-		return this.animData;
+		return safeGetProperty("animData", String.class);
 	}
 	
 	/**
@@ -738,29 +633,186 @@ public class Effect
 	 */
 	public void setAnimData(String data)
 	{
-		this.animData = data;
+		this.properties.put("animData", data);
 	}
 	
-	private String paletteToJSON(Color[] palette)
+	/**
+	 * Sets a plugin option to a specified value in the effect's plugin options.
+	 * <br><b>This only works for PLUGIN-type effects.</b>
+	 * @param option  the plugin option
+	 * @param value  the option's value
+	 */
+	private void setPluginOption(String option, Object value)
 	{
-		StringBuilder json = new StringBuilder();
-		json.append("[");
-		for (int i = 0; i < palette.length; i++)
+		JSONArray pluginOptions = (JSONArray)this.properties.get("pluginOptions");
+		JSONObject optionObject = null;
+		for (Object o : pluginOptions)
 		{
-			Color color = palette[i];
-			json.append("{\"hue\":" + color.hue + "," +
-						"\"saturation\":" + color.saturation + "," +
-						"\"brightness\":" + color.brightness);
-			if (color.probability != -1)
-				json.append(",\"probability\":" + color.probability + "}");
-			else
-				json.append("}");
-			if (i < palette.length-1)
-				json.append(",");
-			else
-				json.append("]");
+			JSONObject jo = (JSONObject)o;
+			if (jo.get("name").equals(option))
+				optionObject = jo;
 		}
-		return json.toString();
+		if (optionObject != null)
+			optionObject.put("value", value);
+		this.properties.put("pluginOptions", pluginOptions);
+	}
+	
+	/**
+	 * Gets a plugin option from the effect's plugin options array.
+	 * @param option  the plugin option to get
+	 * @return  a <code>JSONObject</code> containing the plugin option (name and value)
+	 */
+	private JSONObject getPluginOption(String option)
+	{
+		JSONArray pluginOptions = (JSONArray)this.properties.get("pluginOptions");
+		if (pluginOptions != null)
+		{
+			for (Object o : pluginOptions)
+			{
+				JSONObject jo = (JSONObject)o;
+				if (jo.get("name").equals(option))
+					return jo;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Attempts to locate then return the specified property as type <code>T</code>.
+	 * @param property  the property to get
+	 * @param type  the type of the property (for return and parsing type)
+	 * @return  the value of the specified property as type <code>T</code>
+	 * 			or <code>"null"/-1/-1.0/false</code> if the property cannot be located
+	 */
+	private <T> T safeGetProperty(String property, Class<T> type)
+	{
+		JSONObject option = getPluginOption(property);
+		if (this.properties.containsKey(property))
+		{
+			T value = (T)this.properties.get(property);
+			// Special handling for double types (bug? double json values are formatted as ints)
+			if (type.equals(Double.class) && value instanceof Integer)
+				value = (T)new Double((Integer)value);
+			// Special handling for null strings
+			if ((value == null || value.equals(null)) && type.equals(String.class))
+				return (T)"null";
+			return value;
+		}
+		else if (option != null)
+		{
+			T value = (T)option.get("value");
+			// Special handling for double types (bug? double json values are formatted as ints)
+			if (type.equals(Double.class) && value instanceof Integer)
+				value = (T)new Double((Integer)value);
+			// Special handling for null strings
+			if ((value.equals(null) || value.equals(null)) && type.equals(String.class))
+				return (T)"null";
+			return value;
+		}
+		else if (type.equals(Integer.class))
+		{
+			return (T)new Integer(-1);
+		}
+		else if (type.equals(Double.class))
+		{
+			return (T)new Double(-1.0);
+		}
+		else if (type.equals(boolean.class))
+		{
+			return (T)new Boolean(false);
+		}
+		else
+		{
+			return null;
+		}
+	}
+	
+	/**
+	 * Properly sets a property's value, accounting for all effect versions.
+	 * @param property  the name of the property being updated
+	 * @param value  the new value of the property
+	 */
+	private void safeSetProperty(String property, Object value)
+	{
+		if (this.getAnimType() != null &&
+				this.getAnimType().equals(Effect.Type.PLUGIN) &&
+				this.getVersion().equals("2.0"))
+		{
+			setPluginOption(property, value);
+		}
+		else
+		{
+			this.properties.put(property, value);
+		}
+	}
+	
+	/**
+	 * Properly gets a max/min effect property value.
+	 * @param property  the max/min property to get
+	 * @param maxMin  either "max" or "min" for the max/min values respectively
+	 * @return  the value of the max/min property
+	 */
+	private Object safeGetMaxMinProperty(String property, String maxMin)
+	{
+		JSONObject propertyRange = (JSONObject)this.properties.get(property);
+		if (propertyRange != null)
+			return propertyRange.opt(maxMin);
+		else
+			return -1;
+	}
+	
+	/**
+	 * Properly sets a max/min effect property value.
+	 * @param property  the max/min property to set
+	 * @param maxMin  either "max" or "min" for the max/min values respectively
+	 * @param value  the new max/min value
+	 */
+	private void safeSetMaxMinProperty(String property, String maxMin, int value)
+	{
+		JSONObject propertyRange = (JSONObject)this.properties.get(property);
+		if (propertyRange != null)
+		{
+			propertyRange.put(maxMin, value);
+		}
+		else
+		{
+			propertyRange = new JSONObject();
+			propertyRange.put("maxValue", 0);
+			propertyRange.put("minValue", 0);
+			propertyRange.put(maxMin, value);
+			this.properties.put(property, propertyRange);
+		}
+	}
+	
+	/**
+	 * Converts a json-formatted <code>Color[]</code> array
+	 * into a <code>Color[]</code> array object.
+	 * @param arr  the <code>JSONArray</code> object
+	 * 			   containing the <code>Color[]</code> array
+	 * @return  a <code>Color[]</code> array object
+	 */
+	private Color[] jsonToPalette(JSONArray arr)
+	{
+		Color[] palette = new Color[arr.length()];
+		for (int i = 0; i < arr.length(); i++)
+		{
+			JSONObject colors = arr.getJSONObject(i);
+			int hue = colors.getInt("hue");
+			int sat = colors.getInt("saturation");
+			int brightness = colors.getInt("brightness");
+			palette[i] = Effect.Color.fromHSB(hue,
+					sat, brightness);
+			try
+			{
+				double probability = colors.getDouble("probability");
+				palette[i].setProbability(probability);
+			}
+			catch (JSONException je)
+			{
+				palette[i].setProbability(-1);
+			}
+		}
+		return palette;
 	}
 	
 	/**
@@ -911,7 +963,7 @@ public class Effect
 	}
 	
 	/**
-	 * Stores an frame's RGBW color and transition time.
+	 * Stores a frame's RGBW color and transition time.
 	 */
 	public static class Frame
 	{

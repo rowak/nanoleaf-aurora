@@ -10,6 +10,7 @@ import io.github.rowak.Effect.Color;
 public class FlowEffectBuilder implements EffectBuilder
 {
 	private String name;
+	private String version;
 	private String colorType;
 	private Color[] palette;
 	private int maxTransTime, minTransTime;
@@ -24,6 +25,11 @@ public class FlowEffectBuilder implements EffectBuilder
 	public FlowEffectBuilder()
 	{
 		this.colorType = "HSB";
+		this.version = "1.0";
+		this.maxTransTime = 10;
+		this.minTransTime = 10;
+		this.maxDelayTime = 10;
+		this.minDelayTime = 10;
 	}
 	
 	/**
@@ -34,6 +40,7 @@ public class FlowEffectBuilder implements EffectBuilder
 	{	
 		Effect effect = new Effect();
 		effect.setName(name);
+		effect.setVersion(version);
 		effect.setAnimType(Effect.Type.FLOW);
 		effect.setColorType(colorType);
 		effect.setPalette(palette);
@@ -42,7 +49,7 @@ public class FlowEffectBuilder implements EffectBuilder
 		effect.setMaxDelayTime(maxDelayTime);
 		effect.setMinDelayTime(minDelayTime);
 		effect.setFlowFactor(flowFactor);
-		effect.setDirection(direction.name().toLowerCase());
+		effect.setDirection(direction);
 		effect.setLoop(loop);
 		return effect;
 	}
@@ -134,6 +141,18 @@ public class FlowEffectBuilder implements EffectBuilder
 	public FlowEffectBuilder setLoop(boolean loop)
 	{
 		this.loop = loop;
+		return this;
+	}
+	
+	/**
+	 * Sets the version of the effect.
+	 * <br><b>Note: This value should always be "1.0".</b>
+	 * @param version  the version of the effect
+	 * @return  the current <code>EffectBuilder</code>
+	 */
+	public FlowEffectBuilder setVersion(String version)
+	{
+		this.version = version;
 		return this;
 	}
 }

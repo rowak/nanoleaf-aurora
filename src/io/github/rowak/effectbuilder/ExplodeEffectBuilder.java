@@ -10,6 +10,7 @@ import io.github.rowak.Effect.Color;
 public class ExplodeEffectBuilder implements EffectBuilder
 {
 	private String name;
+	private String version;
 	private String colorType;
 	private Color[] palette;
 	private int maxTransTime, minTransTime;
@@ -24,7 +25,12 @@ public class ExplodeEffectBuilder implements EffectBuilder
 	public ExplodeEffectBuilder()
 	{
 		this.colorType = "HSB";
+		this.version = "1.0";
 		this.direction = Effect.Direction.OUTWARDS;
+		this.maxTransTime = 10;
+		this.minTransTime = 10;
+		this.maxDelayTime = 10;
+		this.minDelayTime = 10;
 	}
 	
 	/**
@@ -35,6 +41,7 @@ public class ExplodeEffectBuilder implements EffectBuilder
 	{	
 		Effect effect = new Effect();
 		effect.setName(name);
+		effect.setVersion(version);
 		effect.setAnimType(Effect.Type.EXPLODE);
 		effect.setColorType(colorType);
 		effect.setPalette(palette);
@@ -43,7 +50,7 @@ public class ExplodeEffectBuilder implements EffectBuilder
 		effect.setMaxDelayTime(maxDelayTime);
 		effect.setMinDelayTime(minDelayTime);
 		effect.setFlowFactor(explodeFactor);
-		effect.setDirection(direction.name().toLowerCase());
+		effect.setDirection(direction);
 		effect.setLoop(loop);
 		return effect;
 	}
@@ -135,6 +142,18 @@ public class ExplodeEffectBuilder implements EffectBuilder
 	public ExplodeEffectBuilder setLoop(boolean loop)
 	{
 		this.loop = loop;
+		return this;
+	}
+	
+	/**
+	 * Sets the version of the effect.
+	 * <br><b>Note: This value should always be "1.0".</b>
+	 * @param version  the version of the effect
+	 * @return  the current <code>EffectBuilder</code>
+	 */
+	public ExplodeEffectBuilder setVersion(String version)
+	{
+		this.version = version;
 		return this;
 	}
 }

@@ -10,6 +10,7 @@ import io.github.rowak.Effect.Color;
 public class FadeEffectBuilder implements EffectBuilder
 {
 	private String name;
+	private String version;
 	private String colorType;
 	private String animData;
 	private Color[] palette;
@@ -24,6 +25,11 @@ public class FadeEffectBuilder implements EffectBuilder
 	public FadeEffectBuilder()
 	{
 		this.colorType = "HSB";
+		this.version = "1.0";
+		this.maxBrightness = 0;
+		this.minBrightness = 0;
+		this.maxTransTime = 10;
+		this.minTransTime = 10;
 	}
 	
 	/**
@@ -34,6 +40,7 @@ public class FadeEffectBuilder implements EffectBuilder
 	{	
 		Effect effect = new Effect();
 		effect.setName(name);
+		effect.setVersion(version);
 		effect.setAnimType(Effect.Type.FADE);
 		effect.setColorType(colorType);
 		effect.setAnimData(animData);
@@ -146,6 +153,18 @@ public class FadeEffectBuilder implements EffectBuilder
 	public FadeEffectBuilder setLoop(boolean loop)
 	{
 		this.loop = loop;
+		return this;
+	}
+	
+	/**
+	 * Sets the version of the effect.
+	 * <br><b>Note: This value should always be "1.0".</b>
+	 * @param version  the version of the effect
+	 * @return  the current <code>EffectBuilder</code>
+	 */
+	public FadeEffectBuilder setVersion(String version)
+	{
+		this.version = version;
 		return this;
 	}
 }

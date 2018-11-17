@@ -5,6 +5,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.json.JSONArray;
@@ -440,7 +442,7 @@ public class Aurora
 		}
 		
 		/**
-		 * 
+		 * Sets the color temperature of the Aurora in Kelvins.
 		 * @param colorTemperature  color temperature in Kelvins
 		 * @return  (204 No Content, 401 Unauthorized, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
@@ -1335,6 +1337,46 @@ public class Aurora
 			this.g = green;
 			this.b = blue;
 			this.w = white;
+		}
+		
+		/**
+		 * Gets the direct neighbors of a panel (maximum is 3, minimum is 1).
+		 * @param panels  all connected panels in the Aurora.
+		 * @return  an array of type <code>Panel</code> containing the
+		 * 			direct neighbors of this panel
+		 */
+		public Panel[] getNeighbors(Panel[] panels)
+		{
+			// Distance constant represents the vertical/horizontal/diagonal distance
+			// that all neighboring panels are within
+			final int DISTANCE_CONST = 86;
+			List<Panel> neighbors = new ArrayList<Panel>();
+			int p1x = this.getX();
+			int p1y = this.getY();
+			for (Panel p2 : panels)
+			{
+				int p2x = p2.getX();
+				int p2y = p2.getY();
+				if (Math.floor(Math.sqrt(Math.pow((p1x - p2x), 2) +
+						Math.pow((p1y - p2y), 2))) == DISTANCE_CONST)
+				{
+					neighbors.add(p2);
+				}
+			}
+			return neighbors.toArray(new Panel[]{});
+		}
+		
+		/**
+		 * Gets the direct neighbors of a panel (maximum is 3, minimum is 1).
+		 * @param aurora  the Aurora to get the panels from
+		 * @return  an array of type <code>Panel</code> containing the
+		 * 			direct neighbors of this panel
+		 * @throws UnauthorizedException  if the access token is invalid
+		 */
+		public Panel[] getNeighbors(Aurora aurora)
+				throws StatusCodeException, UnauthorizedException
+		{
+			return this.getNeighbors(aurora.panelLayout.getPanels());
 		}
 	}
 	

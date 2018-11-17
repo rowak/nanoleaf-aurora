@@ -15,7 +15,7 @@ public class WheelEffectBuilder implements EffectBuilder
 	private String animData;
 	private Color[] palette;
 	private int maxTransTime, minTransTime;
-	private float windowSize;
+	private int windowSize;
 	private Effect.Direction direction;
 	private boolean loop;
 	
@@ -25,6 +25,9 @@ public class WheelEffectBuilder implements EffectBuilder
 	public WheelEffectBuilder()
 	{
 		this.colorType = "HSB";
+		this.version = "1.0";
+		this.maxTransTime = 10;
+		this.minTransTime = 10;
 	}
 	
 	/**
@@ -42,8 +45,8 @@ public class WheelEffectBuilder implements EffectBuilder
 		effect.setPalette(palette);
 		effect.setMaxTransTime(maxTransTime);
 		effect.setMinTransTime(minTransTime);
-		effect.setFlowFactor(windowSize);
-		effect.setDirection(direction.name().toLowerCase());
+		effect.setWindowSize(windowSize);
+		effect.setDirection(direction);
 		effect.setLoop(loop);
 		return effect;
 	}
@@ -55,8 +58,8 @@ public class WheelEffectBuilder implements EffectBuilder
 	}
 	
 	/**
-	 * Sets the version of the effect.<br>
-	 * <b>Note: Currently only supports version 1.0</b>
+	 * Sets the version of the effect.
+	 * <br><b>Note: This value should always be "1.0".</b>
 	 * @param version  the version of the effect
 	 * @return  the current <code>EffectBuilder</code>
 	 */
@@ -117,7 +120,7 @@ public class WheelEffectBuilder implements EffectBuilder
 	 * @param windowSize  the desired window size
 	 * @return  the current <code>EffectBuilder</code>
 	 */
-	public WheelEffectBuilder setWindowSize(float windowSize)
+	public WheelEffectBuilder setWindowSize(int windowSize)
 	{
 		this.windowSize = windowSize;
 		return this;

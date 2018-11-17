@@ -87,4 +87,16 @@ public class StaticEffectBuilder
 		this.frames.put(panelId, frame);
 		return this;
 	}
+	
+	/**
+	 * Adds a frame to all panels in the effect.
+	 * @param frame  the RGBW color and transition time
+	 * @return  the current <code>StatisEffectBuilder</code>
+	 */
+	public StaticEffectBuilder setAllPanels(Frame frame)
+	{
+		for (Aurora.Panel panel : this.panels)
+			this.frames.put(panel.getId(), frame);
+		return this;
+	}
 }

@@ -1,5 +1,5 @@
 # Nanoleaf Aurora Java API
-A java wrapper for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional high-level helper methods and classes to make your life easier. The API is designed to be simpler to use than the official API by minimizing the use of JSON data.
+A java wrapper and JSON parser for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional high-level helper methods and classes to make your life easier. The API is designed to be simpler to use than the official API by abstracting the use of JSON data.
 
 ## [Documentation](https://htmlpreview.github.io/?https://github.com/rowak/nanoleaf-aurora/blob/master/doc/index.html)
 
@@ -17,18 +17,18 @@ Simply add the following dependency to your ```pom.xml``` file in your project.
 You can also download the [compilled jar](http://central.maven.org/maven2/io/github/rowak/nanoleaf-aurora/) and import it into your project.
 
 ## Connecting to the Aurora
-First search for all of the Aurora devices connected to your local network, then select one from the returned list. Make sure to store the host name and port.
+First, search for all of the Aurora devices connected to your local network, then select one from the returned list. Make sure to store the host name and port.
 ```Java
 int timeout = 5000;
 List<InetSocketAddress> auroras = Setup.findAuroras(timeout)
 String host = auroras.get(0).getHostName();
 int port = auroras.get(0).getPort();
 ```
-Next define the API level (Currently "v1").
+Next define the API level (currently "v1").
 ```Java
 String apiLevel = "v1";
 ```
-Then you can create an access token. (Note: You must physically hold down the power button on your Aurora controller for 5-7 seconds before running the following code).
+Then you can create an access token. (Note: For security purposes, you must physically hold down the power button on your Aurora controller for 5-7 seconds until the LED starts flashing before running the following code). Make sure to write down your access token for future use.
 ```Java
 String accessToken = Setup.createAccessToken(host, port, apiLevel);
 ```
@@ -86,7 +86,7 @@ The panel layout methods are mostly getters used to get various information abou
 ```Java
 int numPanels = aurora.panelLayout().getNumPanels(true/false);  // returns the number of connected panels. Note: The Rhythm module counts as a panel by default. Use ```includeRhythm``` to choose whether to include this or not
 int sideLength = aurora.panelLayout().getSideLength();          // returns the side length of each panel
-Panel[] panels = aurora.panelLayout().getPositionData();        // returns an array of type Panel containing each connected Aurora panel
+Panel[] panels = aurora.panelLayout().getPanels();              // returns an array of type Panel containing each connected Aurora panel
 ```
 
 ### Rhythm
@@ -98,7 +98,7 @@ boolean auxAvailable = aurora.rhythm().getAuxAvailable();  // whether of not the
 ```
 
 ### External Streaming
-External streaming is an advanced feature that allows for continuous updating of the Aurora panels by sending UDP packets. External streaming can be enabled using the method ```Aurora.ExternalStreaming.enable()```. Static animation data can be sent to the Aurora using the method ```Aurora.ExternalStreaming.sendAnimData()```. Effects (with animation data) can also be sent using the method ```Aurora.ExternalStreaming.sendStaticEffect()```. *Note that these methods do not return anything. If the data sent is invalid, the server will not send any kind of response*.
+External streaming is an advanced feature that allows for continuous updating of the Aurora panels by sending UDP packets. External streaming can be enabled using the method ```Aurora.ExternalStreaming.enable()```. Static animation data can be sent to the Aurora using the method ```Aurora.ExternalStreaming.sendAnimData()```. Effects (with animation data) can also be sent using the method ```Aurora.ExternalStreaming.sendStaticEffect()```. Individual panels can be updated using the method ```Aurora.ExternalStreaming.setPanel()```. *Note that these methods do not return anything. If the data sent is invalid, the server will not send any kind of response*.
 
 ## The ```Effect``` Class
 The ```Effect``` class is a helper class for parsing raw effect json data received from the Aurora into a **local** object. This allows for easier reading from and writing to effects, and helps make creating new effects much easier. The Aurora class implements these methods where necessary by default so you don't have call them yourself.
@@ -107,11 +107,11 @@ Note: The instance variables in ```Effect``` objects are not all used by certain
 The code below requests an effect named "My Effect" from the Aurora, sets the effect's delay time to 10, then uploads the changes back to the Aurora.
 ```Java
 Effect effect = aurora.effects().getEffect("My Effect");  // creates a new Effect object by automatically parsing the json data
-effect.setDelayTime(10);                                  // sets the effect delay time. Note: This change does not affect the physical Aurora display, only the local Effect object
-aurora.effects().addEffect(effect);                       // uploads the modified effect to the aurora
+effect.setDelayTime(10);                                  // sets the effect delay time. Note: This change does not affect the physical Aurora display yet, only the local Effect object
+aurora.effects().addEffect(effect);                       // uploads the modified effect to the Aurora and the changes are applied
 ```
 ### Warning
-Changing json data on your Aurora can cause effects to break if you attempt to change certain properties (that shouldn't be changed) or json structure. If your Nanoleaf app suddenly starts crashing, force stop the app (Android) or restart your device (iOS) to return the app to a stable state. I came across this multiple times while messing around with the api. Refer to the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) for more information about effects and their properties.
+Changing json data in effects that you upload to your Aurora can cause the Nanoleaf app to crash if you attempt to change properties that shouldn't be changed for certain effects. If your Nanoleaf app suddenly starts crashing, use the ```Aurora.Effect.getEffectsList()``` method to list all of the effects, then use the ```Aurora.Effect.deleteEffect()``` method to remove any problem effects. I constantly came across this problem while messing around with the api. Refer to the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) for more information about effects and their properties.
 
 ## Effect Builders
 Effect builders are small helper classes that assist in creating effects programatically. These classes implement the ```EffectBuilder``` interface except for the ```CustomEffectBuilder``` and the ```StaticEffectBuilder```.
@@ -119,7 +119,7 @@ Effect builders are small helper classes that assist in creating effects program
 The ```CustomEffectBuilder``` class is a more advanced helper class that assists in the creation of ```custom```-type effects. Animation frames are added to the builder object using the ```CustomEffectBuilder.addFrame()``` method. This method adds a frame for only **one** panel at a time. Once all of the frames have been defined, an ```Effect``` object can be built from the animation object using the ```CustomEffectBuilder.build()``` method.
 #### Example
 ```Java
-Panel[] panels = aurora.panelLayout().getPositionData();        // creates a new array of type Panel, containing all of the connected Panel data
+Panel[] panels = aurora.panelLayout().getPanels();              // creates a new array of type Panel, containing all of the connected Panel data
 CustomEffectBuilder builder = new CustomEffectBuilder(aurora);  // creates an instance of the effect builder object
 for (Panel panel : panels)
 {

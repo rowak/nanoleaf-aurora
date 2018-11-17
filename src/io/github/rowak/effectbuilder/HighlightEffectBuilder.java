@@ -10,6 +10,7 @@ import io.github.rowak.Effect.Color;
 public class HighlightEffectBuilder implements EffectBuilder
 {
 	private String name;
+	private String version;
 	private String colorType;
 	private String animData;
 	private Color[] palette;
@@ -24,6 +25,13 @@ public class HighlightEffectBuilder implements EffectBuilder
 	public HighlightEffectBuilder()
 	{
 		this.colorType = "HSB";
+		this.version = "1.0";
+		this.maxBrightness = 100;
+		this.minBrightness = 100;
+		this.maxTransTime = 10;
+		this.minTransTime = 10;
+		this.maxDelayTime = 10;
+		this.minDelayTime = 10;
 	}
 	
 	/**
@@ -34,6 +42,7 @@ public class HighlightEffectBuilder implements EffectBuilder
 	{	
 		Effect effect = new Effect();
 		effect.setName(name);
+		effect.setVersion(version);
 		effect.setAnimType(Effect.Type.HIGHLIGHT);
 		effect.setColorType(colorType);
 		effect.setAnimData(animData);
@@ -146,6 +155,18 @@ public class HighlightEffectBuilder implements EffectBuilder
 	public HighlightEffectBuilder setLoop(boolean loop)
 	{
 		this.loop = loop;
+		return this;
+	}
+	
+	/**
+	 * Sets the version of the effect.
+	 * <br><b>Note: This value should always be "1.0".</b>
+	 * @param version  the version of the effect
+	 * @return  the current <code>EffectBuilder</code>
+	 */
+	public HighlightEffectBuilder setVersion(String version)
+	{
+		this.version = version;
 		return this;
 	}
 }
