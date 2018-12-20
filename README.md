@@ -10,7 +10,7 @@ Simply add the following dependency to your ```pom.xml``` file in your project.
 <dependency>
   <groupId>io.github.rowak</groupId>
   <artifactId>nanoleaf-aurora</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
 </dependency>
 ```
 ### Manual
@@ -28,7 +28,7 @@ Next define the API level (currently "v1").
 ```Java
 String apiLevel = "v1";
 ```
-Then you can create an access token. (Note: For security purposes, you must physically hold down the power button on your Aurora controller for 5-7 seconds until the LED starts flashing before running the following code). Make sure to write down your access token for future use.
+Then you can create an access token. (Note: For security purposes, you must physically hold down the power button on your Aurora controller for 5-7 seconds until the LED starts flashing before running the following code). Make sure to write down your access token for future use, however you can create as many as you like.
 ```Java
 String accessToken = Setup.createAccessToken(host, port, apiLevel);
 ```
@@ -100,11 +100,11 @@ boolean auxAvailable = aurora.rhythm().getAuxAvailable();  // whether of not the
 ### External Streaming
 External streaming is an advanced feature that allows for continuous updating of the Aurora panels by sending UDP packets. External streaming can be enabled using the method ```Aurora.ExternalStreaming.enable()```. Static animation data can be sent to the Aurora using the method ```Aurora.ExternalStreaming.sendAnimData()```. Effects (with animation data) can also be sent using the method ```Aurora.ExternalStreaming.sendStaticEffect()```. Individual panels can be updated using the method ```Aurora.ExternalStreaming.setPanel()```. *Note that these methods do not return anything. If the data sent is invalid, the server will not send any kind of response*.
 
-## The ```Effect``` Class
-The ```Effect``` class is a helper class for parsing raw effect json data received from the Aurora into a **local** object. This allows for easier reading from and writing to effects, and helps make creating new effects much easier. The Aurora class implements these methods where necessary by default so you don't have call them yourself.
-Note: The instance variables in ```Effect``` objects are not all used by certain effect types. Attempting to get these variables will either result in ```-1``` (int/double) or ```null``` (String/Color[]). Use the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) as a reference when working with ```Effect``` objects.
+## The Effect Class
+The Effect class is a helper class for parsing raw effect json data received from the Aurora into a **local** object. This allows for easier reading from and writing to effects, and helps make creating new effects much easier. The Aurora class implements these methods where necessary by default so you don't have call them yourself.
+Note: The instance variables in Effect objects are not all used by certain effect types. Attempting to get these variables will either result in -1 (int/double) or ```null``` (String/Color[]). Use the [official API documentation](http://forum.nanoleaf.me/docs/openapi#_e5qyi8m8u68) as a reference when working with Effect objects.
 ### Example
-The code below requests an effect named "My Effect" from the Aurora, sets the effect's delay time to 10, then uploads the changes back to the Aurora.
+The code below requests an effect named "My Effect" from the Aurora, sets the effect's delay time to 10, then uploads the changes back to the Aurora. Note that not all effect properties are supported by all effects.
 ```Java
 Effect effect = aurora.effects().getEffect("My Effect");  // creates a new Effect object by automatically parsing the json data
 effect.setDelayTime(10);                                  // sets the effect delay time. Note: This change does not affect the physical Aurora display yet, only the local Effect object
@@ -115,7 +115,7 @@ Changing json data in effects that you upload to your Aurora can cause the Nanol
 
 ## Effect Builders
 Effect builders are small helper classes that assist in creating effects programatically. These classes implement the ```EffectBuilder``` interface except for the ```CustomEffectBuilder``` and the ```StaticEffectBuilder```.
-### The ```CustomEffectBuilder```
+### The CustomEffectBuilder
 The ```CustomEffectBuilder``` class is a more advanced helper class that assists in the creation of ```custom```-type effects. Animation frames are added to the builder object using the ```CustomEffectBuilder.addFrame()``` method. This method adds a frame for only **one** panel at a time. Once all of the frames have been defined, an ```Effect``` object can be built from the animation object using the ```CustomEffectBuilder.build()``` method.
 #### Example
 ```Java
@@ -131,7 +131,7 @@ aurora.effects().addEffect(effect);                             // uploads the n
 ```
 
 ## StatusCodeExceptions
-A ```StatusCodeException``` is thrown whenever the response code from a request to the Aurora is an error (400, 401, 403, 404, 422, 500).
+A StatusCodeException is thrown whenever the response code from a request to the Aurora is an error (400, 401, 403, 404, 422, 500).
 ### 400 - Bad Request
 Indicates that the request body itself was malformed (not the reqeust body content). *This exception is usually handelled by the API and is not usually accessable by the user.*
 ### 401 - Unauthorized

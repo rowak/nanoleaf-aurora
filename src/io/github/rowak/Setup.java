@@ -63,6 +63,7 @@ public class Setup
 			multicast = new MulticastSocket(null);
 			multicast.bind(host);
 			multicast.setTimeToLive(4);
+			multicast.setSoTimeout(timeout);
 			multicast.send(requestPacket);
 		}
 		catch (SocketException se)

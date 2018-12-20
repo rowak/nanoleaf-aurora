@@ -17,14 +17,15 @@ import com.github.kevinsawicki.http.HttpRequest;
 import io.github.rowak.StatusCodeException.ResourceNotFoundException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.StatusCodeException.UnprocessableEntityException;
+import io.github.rowak.effectbuilder.CustomEffectBuilder;
 
 /**
  * The primary class in the API. Contains methods and other
- * classes for accessing and manipulating Aurora information.
+ * classes for accessing and manipulating the Aurora.
  */
 public class Aurora
 {
-	private String host, apiLevel, accessToken;
+	private String hostName, apiLevel, accessToken;
 	private int port;
 	
 	private String name;
@@ -41,17 +42,17 @@ public class Aurora
 	
 	/**
 	 * Creates a new instance of the Aurora controller.
-	 * @param host  the hostname of the Aurora controller
+	 * @param hostName  the hostname of the Aurora controller
 	 * @param port  the port of the Aurora controller (default=16021)
 	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: /api/v1/)
 	 * @param accessToken  a unique authentication token
 	 * @throws UnauthorizedException  if the access token is invalid
 	 */
-	public Aurora(String host, int port,
+	public Aurora(String hostName, int port,
 			String apiLevel, String accessToken)
 					throws StatusCodeException, UnauthorizedException
 	{
-		init(host, port, apiLevel, accessToken);
+		init(hostName, port, apiLevel, accessToken);
 	}
 	
 	/**
@@ -72,15 +73,16 @@ public class Aurora
 	 * Initialize the Aurora object and gather initial data.
 	 * @param host  the hostname of the Aurora controller
 	 * @param port  the port of the Aurora controller (default=16021)
-	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: /api/v1/)
+	 * @param apiLevel  the current version of the Aurora OpenAPI
+	 * 					(for example: "v1" or "beta")
 	 * @param accessToken  a unique authentication token
 	 * @throws UnauthorizedException  if the access token is invalid
 	 */
-	private void init(String host, int port,
+	private void init(String hostName, int port,
 			String apiLevel, String accessToken)
 					throws StatusCodeException, UnauthorizedException
 	{
-		this.host = host;
+		this.hostName = hostName;
 		this.apiLevel = apiLevel;
 		this.port = port;
 		this.accessToken = accessToken;
@@ -107,9 +109,9 @@ public class Aurora
 	 * Returns the Aurora's host name (IP address).
 	 * @return  the host name for this Aurora
 	 */
-	public String getHost()
+	public String getHostName()
 	{
-		return this.host;
+		return this.hostName;
 	}
 	
 	/**
@@ -299,16 +301,35 @@ public class Aurora
 		
 		/**
 		 * Sets the master brightness of the Aurora.
-		 * @param brightness  the desired brightness
+		 * @param brightness  the new brightness level as a percent
 		 * @return  (204 No Content, 401 Unauthorized, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws UnprocessableEntityException  if <code>brightness</code> is not within the
-		 * 								 		 maximum and minimum restrictions
+		 * 								 		 maximum (100) and minimum (0) restrictions
 		 */
 		public int setBrightness(int brightness)
 				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
 		{
 			String body = String.format("{\"brightness\": {\"value\": %d}}", brightness);
+			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
+			checkStatusCode(req.code());
+			return req.code();
+		}
+		
+		/**
+		 * Fades the master brightness of the Aurora over a perdiod of time.
+		 * @param brightness  the new brightness level as a percent
+		 * @param duration  the fade time <i>in seconds</i>
+		 * @return  (204 No Content, 401 Unauthorized, 422 Unprocessable Entity)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws UnprocessableEntityException  if <code>brightness</code> is not within the
+		 * 								 		 maximum (100) and minimum (0) restrictions
+		 */
+		public int fadeToBrightness(int brightness, int duration)
+				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
+		{
+			String body = String.format("{\"brightness\": {\"value\": %d, \"duration\": %d}}",
+					brightness, duration);
 			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
 			checkStatusCode(req.code());
 			return req.code();
@@ -346,7 +367,7 @@ public class Aurora
 		
 		/**
 		 * Sets the hue of the Aurora (static/custom effects only).
-		 * @param hue  the desired hue.
+		 * @param hue  the new hue
 		 * @return  (204 No Content, 401 Unauthorized, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws UnprocessableEntityException  if <code>hue</code> is not within the
@@ -393,7 +414,7 @@ public class Aurora
 		
 		/**
 		 * Sets the saturation of the Aurora (static/custom effects only).
-		 * @param saturation  the desired saturation
+		 * @param saturation  the new saturation
 		 * @return  (204 No Content, 401 Unauthorized, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws UnprocessableEntityException  if <code>saturation</code> is not within
@@ -510,7 +531,7 @@ public class Aurora
 		/**
 		 * Sets the selected effect on the Aurora to the effect
 		 * specified by <code>effectName</code>.
-		 * @param effectName  the name of the desired effect
+		 * @param effectName  the name of the effect
 		 * @return  (200 OK, 204 No Content, 401 Unauthorized,
 		 * 			404 Resource Not Found, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
@@ -565,7 +586,7 @@ public class Aurora
 		/**
 		 * Creates an <code>Effect</code> object from the <code>JSON</code> data
 		 * for the effect <code>effectName</code>.
-		 * @param effectName  the name of the desired effect
+		 * @param effectName  the name of the effect
 		 * @return  a new <code>Effect</code> object based on the effect <code>effectName</code>
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws ResourceNotFoundException  if the effect <code>effectName</code>
@@ -599,7 +620,7 @@ public class Aurora
 		 * Uploads and installs the local effect <code>effect</code> to the Aurora controller.
 		 * If the effect does not exist on the Aurora it will be created. If the effect exists
 		 * it will be overwritten.
-		 * @param effect  the <code>Effect</code> object of the desired effect
+		 * @param effect  the effect to be uploaded
 		 * @return  (200 OK, 204 No Content,
 		 * 			401 Unauthorized, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
@@ -616,7 +637,7 @@ public class Aurora
 		
 		/**
 		 * Deletes an effect from the Aurora controller.
-		 * @param effectName  the name of the desired effect
+		 * @param effectName  the name of the effect
 		 * @return  (200 OK, 204 No Content, 401 Unauthorized,
 		 * 				404 Resource Not Found, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
@@ -632,8 +653,8 @@ public class Aurora
 		
 		/**
 		 * Renames an effect on the Aurora controller.
-		 * @param effectName  the name of the desired effect
-		 * @param newName  the new name of the desired effect
+		 * @param effectName  the name of the effect
+		 * @param newName  the new name of the effect
 		 * @return  (200 OK, 204 No Content, 401 Unauthorized,
 		 * 			404 Resource Not Found, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
@@ -652,7 +673,7 @@ public class Aurora
 		/**
 		 * Uploads and previews the local effect <code>effect</code> on
 		 * the Aurora controller without installing it.
-		 * @param effect  the <code>Effect</code> object of the desired effect
+		 * @param effect  the effect to be previewed
 		 * @return  (200 OK, 204 No Content,
 		 * 			401 Unauthorized, 422 Unprocessable Entity)
 		 * @throws UnauthorizedException  if the access token is invalid
@@ -670,9 +691,9 @@ public class Aurora
 		/**
 		 * Uploads and previews the local effect <code>effect</code> on
 		 * the Aurora controller for a given duration without installing it.
-		 * @param effectName   the name of the desired effect
-		 * @param duration  the desired duration for the effect to be displayed
-		 * @return  200 OK, 204 No Content,
+		 * @param effectName   the name of the effect to be previewed
+		 * @param duration  the duration for the effect to be displayed
+		 * @return  (200 OK, 204 No Content,
 		 * 			401 Unauthorized, 404 Resource Not Found)
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws ResourceNotFoundException  if the effect <code>effectName</code>
@@ -693,7 +714,7 @@ public class Aurora
 		 * @param blue  the blue RGB value
 		 * @param transitionTime  the time to transition to this frame from
 		 * 						  the previous frame (must be 1 or greater)
-		 * @return  200 OK, 204 No Content,
+		 * @return  (200 OK, 204 No Content,
 		 * 			401 Unauthorized, 422 UnprocessableEntityException)
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws UnprocessableEntityException  if the <code>panel</code> is not found on the Aurora
@@ -711,10 +732,10 @@ public class Aurora
 		/**
 		 * Sets the color of a single panel on the Aurora.
 		 * @param panel  the target panel
-		 * @param hexColor  the desired hex color
+		 * @param hexColor  the new hex color
 		 * @param transitionTime  the time to transition to this frame from
 		 * 						  the previous frame (must be 1 or greater)
-		 * @return  200 OK, 204 No Content,
+		 * @return  (200 OK, 204 No Content,
 		 * 			401 Unauthorized, 422 UnprocessableEntityException)
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws UnprocessableEntityException  if the <code>panel</code> is not found on the Aurora
@@ -739,7 +760,7 @@ public class Aurora
 		 * @param blue  the blue RGB value
 		 * @param transitionTime  the time to transition to this frame from
 		 * 						  the previous frame (must be 1 or greater)
-		 * @return  200 OK, 204 No Content,
+		 * @return  (200 OK, 204 No Content,
 		 * 			401 Unauthorized, 422 UnprocessableEntityException)
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws UnprocessableEntityException  if the <code>panelId</code> is not valid
@@ -763,10 +784,10 @@ public class Aurora
 		/**
 		 * Sets the color of a single panel on the Aurora.
 		 * @param panelId  the target panel id
-		 * @param hexColor  the desired hex color
+		 * @param hexColor  the new hex color
 		 * @param transitionTime  the time to transition to this frame from
 		 * 						  the previous frame (must be 1 or greater)
-		 * @return  200 OK, 204 No Content,
+		 * @return  (200 OK, 204 No Content,
 		 * 			401 Unauthorized, 422 UnprocessableEntityException)
 		 * @throws UnauthorizedException  if the access token is invalid
 		 * @throws UnprocessableEntityException  if the <code>panelId</code> is not valid
@@ -781,6 +802,45 @@ public class Aurora
 			java.awt.Color color = java.awt.Color.decode(hexColor);
 			return setPanelColor(panelId, color.getRed(),
 					color.getGreen(), color.getBlue(), transitionTime);
+		}
+		
+		/**
+		 * Fades all of the panels to an RGB color over a perdiod of time.
+		 * @param red  the red RGB value
+		 * @param green  the green RGB value
+		 * @param blue  the blue RGB value
+		 * @param duration  the fade time <i>in hertz (10Hz = 1sec)</i>
+		 * @return  (200 OK, 204 No Content,
+		 * 			401 Unauthorized, 422 UnprocessableEntityException)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws UnprocessableEntityException  if the RGB values are outside of
+		 * 										 the range 0-255 or if the duration
+		 * 										 is negative
+		 */
+		public int fadeToColor(int red, int green, int blue, int duration)
+				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
+		{
+			CustomEffectBuilder ceb = new CustomEffectBuilder(Aurora.this);
+			ceb.setAllPanels(new Frame(red, green, blue, 0, duration));
+			return previewEffect(ceb.build("", false));
+		}
+		
+		/**
+		 * Fades all of the panels to a hex color over a perdiod of time.
+		 * @param hexColor the new hex color
+		 * @param duration  the fade time <i>in hertz (frames per second)</i>
+		 * @return  (200 OK, 204 No Content,
+		 * 			401 Unauthorized, 422 UnprocessableEntityException)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws UnprocessableEntityException  if the hex color is invalid
+		 * 										 or if the duration is negative
+		 */
+		public int fadeToColor(String hexColor, int duration)
+				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
+		{
+			java.awt.Color color = java.awt.Color.decode(hexColor);
+			return fadeToColor(color.getRed(),
+					color.getGreen(), color.getBlue(), duration);
 		}
 		
 		/**
@@ -876,7 +936,7 @@ public class Aurora
 		/**
 		 * Finds a <code>Panel</code> object if you have a panel
 		 * id but not the panel object.
-		 * @param id  the desired panel id to check for
+		 * @param id  the panel id for the panel
 		 * @return  a <code>Panel</code> with the same id, or null if no panel is found
 		 * @throws UnauthorizedException  if the access token is invalid
 		 */
@@ -886,7 +946,9 @@ public class Aurora
 			for (Panel panel : getPanels())
 			{
 				if (panel.getId() == id)
+				{
 					return panel;
+				}
 			}
 			return null;
 		}
@@ -1198,6 +1260,13 @@ public class Aurora
 	{
 		private int x, y, orientation;
 		
+		/**
+		 * Creates a new instance of Position with an x, y
+		 * position and orientation.
+		 * @param x  the x-value on the grid
+		 * @param y  the y-value on the grid
+		 * @param orientation  the orientation on the grid in degrees
+		 */
 		public Position(int x, int y, int orientation)
 		{
 			this.x = x;
@@ -1205,16 +1274,28 @@ public class Aurora
 			this.orientation = orientation;
 		}
 		
+		/**
+		 * Gets the x-value of this position.
+		 * @return  the x-value
+		 */
 		public int getX()
 		{
 			return this.x;
 		}
 		
+		/**
+		 * Gets the y-value of this position.
+		 * @return  the y-value
+		 */
 		public int getY()
 		{
 			return this.y;
 		}
 		
+		/**
+		 * Gets the orientation of this position in degrees.
+		 * @return  the orientation
+		 */
 		public int getOrientation()
 		{
 			return this.orientation;
@@ -1324,7 +1405,20 @@ public class Aurora
 		}
 		
 		/**
-		 * Sets the RGBW values for the panel's color.
+		 * Sets the RGB values of this panel's color.
+		 * @param red  the red RGBW value
+		 * @param green  the green RGBW value
+		 * @param blue  the blue RGBW value
+		 */
+		public void setRGB(int red, int green, int blue)
+		{
+			this.r = red;
+			this.g = green;
+			this.b = blue;
+		}
+		
+		/**
+		 * Sets the RGBW values of the panel's color.
 		 * @param red  the red RGBW value
 		 * @param green  the green RGBW value
 		 * @param blue  the blue RGBW value
@@ -1333,9 +1427,7 @@ public class Aurora
 		public void setRGBW(int red, int green,
 				int blue, int white)
 		{
-			this.r = red;
-			this.g = green;
-			this.b = blue;
+			setRGB(red, green, blue);
 			this.w = white;
 		}
 		
@@ -1388,7 +1480,7 @@ public class Aurora
 	private String getURL(String endpoint)
 	{
 		return String.format("http://%s:%d/api/%s/%s/%s",
-				host, port, apiLevel, accessToken, endpoint);
+				hostName, port, apiLevel, accessToken, endpoint);
 	}
 	
 	/**

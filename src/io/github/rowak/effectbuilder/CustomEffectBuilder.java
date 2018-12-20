@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import io.github.rowak.Aurora;
+import io.github.rowak.Aurora.Panel;
 import io.github.rowak.Effect;
+import io.github.rowak.Frame;
 import io.github.rowak.StatusCodeException;
-import io.github.rowak.Effect.Frame;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 
 /**
@@ -72,6 +73,20 @@ public class CustomEffectBuilder
 	}
 	
 	/**
+	 * Adds a frame to all panels in the effect.
+	 * @param frame  the RGBW color and transition time
+	 * @return  the current <code>CustomEffectBuilder</code>
+	 */
+	public CustomEffectBuilder setAllPanels(Frame frame)
+	{
+		for (Panel p : panels)
+		{
+			frames.get(p.getId()).add(frame);
+		}
+		return this;
+	}
+	
+	/**
 	 * Add a new frame (RGBW color and transition time) to the effect.
 	 * @param panel  the panel to add the frame to
 	 * @param frame  the RGBW color and transition time
@@ -79,7 +94,7 @@ public class CustomEffectBuilder
 	 */
 	public CustomEffectBuilder addFrame(Aurora.Panel panel, Frame frame)
 	{
-		this.frames.get(panel.getId()).add(frame);
+		frames.get(panel.getId()).add(frame);
 		return this;
 	}
 	
@@ -91,7 +106,7 @@ public class CustomEffectBuilder
 	 */
 	public CustomEffectBuilder addFrame(int panelId, Frame frame)
 	{
-		this.frames.get(panelId).add(frame);
+		frames.get(panelId).add(frame);
 		return this;
 	}
 	
@@ -103,7 +118,7 @@ public class CustomEffectBuilder
 	 */
 	public CustomEffectBuilder removeFrame(Aurora.Panel panel, Frame frame)
 	{
-		this.frames.get(panel.getId()).remove(frame);
+		frames.get(panel.getId()).remove(frame);
 		return this;
 	}
 	
@@ -115,7 +130,7 @@ public class CustomEffectBuilder
 	 */
 	public CustomEffectBuilder removeFrame(int panelId, Frame frame)
 	{
-		this.frames.get(panelId).remove(frame);
+		frames.get(panelId).remove(frame);
 		return this;
 	}
 }

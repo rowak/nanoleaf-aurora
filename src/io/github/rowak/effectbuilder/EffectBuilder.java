@@ -1,5 +1,6 @@
 package io.github.rowak.effectbuilder;
 
+import io.github.rowak.Color;
 import io.github.rowak.Effect;
 
 /**
@@ -33,7 +34,7 @@ public interface EffectBuilder
 	 * @param palette  the desired palette for the effect to use
 	 * @return  the current <code>EffectBuilder</code>
 	 */
-	public abstract EffectBuilder setPalette(Effect.Color[] palette);
+	public abstract EffectBuilder setPalette(Color[] palette);
 	
 	/**
 	 * Sets whether of not the effect should loop.

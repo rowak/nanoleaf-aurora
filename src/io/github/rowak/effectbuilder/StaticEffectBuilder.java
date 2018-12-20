@@ -7,8 +7,8 @@ import java.util.Map;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.Effect;
+import io.github.rowak.Frame;
 import io.github.rowak.StatusCodeException;
-import io.github.rowak.Effect.Frame;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 
 /**
@@ -60,7 +60,6 @@ public class StaticEffectBuilder
 							frame.getTransitionTime());
 			}
 		}
-		
 		return Effect.createStaticEffect(effectName, data.toString());
 	}
 	
@@ -91,12 +90,14 @@ public class StaticEffectBuilder
 	/**
 	 * Adds a frame to all panels in the effect.
 	 * @param frame  the RGBW color and transition time
-	 * @return  the current <code>StatisEffectBuilder</code>
+	 * @return  the current <code>StaticEffectBuilder</code>
 	 */
 	public StaticEffectBuilder setAllPanels(Frame frame)
 	{
 		for (Aurora.Panel panel : this.panels)
+		{
 			this.frames.put(panel.getId(), frame);
+		}
 		return this;
 	}
 }

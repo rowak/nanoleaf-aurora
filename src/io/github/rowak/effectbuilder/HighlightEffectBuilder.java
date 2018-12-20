@@ -1,7 +1,7 @@
 package io.github.rowak.effectbuilder;
 
+import io.github.rowak.Color;
 import io.github.rowak.Effect;
-import io.github.rowak.Effect.Color;
 
 /**
  * A small helper class for easily creating new

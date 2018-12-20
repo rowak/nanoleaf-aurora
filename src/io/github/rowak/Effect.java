@@ -121,6 +121,27 @@ public class Effect
 	}
 	
 	/**
+	 * Converts an effect object to <code>JSON</code> format.
+	 * @return  the effect in <code>JSON</code> format
+	 */
+	@Override
+	public String toString()
+	{
+		return toJSON(null);
+	}
+	
+	/**
+	 * Checks if two effects are equal based on their properties.
+	 * @param other  the effect to compare this effect to
+	 * @return  true, if the effects are equal
+	 */
+	@Override
+	public boolean equals(Object other)
+	{
+		return this.toString().equals(other.toString());
+	}
+	
+	/**
 	 * Creates a new static-type <code>Effect</code>. Each panel can be
 	 * individually set to the desired color.
 	 * @param effectName  the desired name of the new effect
@@ -213,6 +234,7 @@ public class Effect
 	 * <br><b>Note: Plugin options are only available for pre-existing version
 	 * 2.0 plugin-type effects.</b>
 	 * @return  a <code>JSONArray</code> containing the effect pluginOptions
+	 * 			in the json form {"name": NAME, "value": VALUE}
 	 */
 	public JSONArray getPluginOptions()
 	{
@@ -800,7 +822,7 @@ public class Effect
 			int hue = colors.getInt("hue");
 			int sat = colors.getInt("saturation");
 			int brightness = colors.getInt("brightness");
-			palette[i] = Effect.Color.fromHSB(hue,
+			palette[i] = Color.fromHSB(hue,
 					sat, brightness);
 			try
 			{
@@ -813,225 +835,5 @@ public class Effect
 			}
 		}
 		return palette;
-	}
-	
-	/**
-	 * Represents a single color in an effect's palette.
-	 * Used to store <code>JSON</code>-parsed data.
-	 */
-	public static class Color
-	{
-		private int hue, saturation, brightness;
-		private double probability;
-		
-		/**
-		 * Creates an HSB instance of <code>Color</code> <u>without</u> probability.
-		 * @param hue  the hue of the color
-		 * @param saturation  the saturation of the color
-		 * @param brightness  the brightness of the color
-		 * @return  a new <code>Color</code>
-		 */
-		public static Color fromHSB(int hue,
-				int saturation, int brightness)
-		{
-			return fromHSB(hue, saturation, brightness, -1);
-		}
-		
-		/**
-		 * Creates an HSB instance of <code>Color</code> with probability.
-		 * @param hue  the hue of the color
-		 * @param saturation  the saturation of the color
-		 * @param brightness  the brightness of the color
-		 * @param probability  the probability of the color appearing in the effect
-		 * @return  a new <code>Color</code>
-		 */
-		public static Color fromHSB(int hue, int saturation,
-				int brightness, double probability)
-		{
-			Color color = new Color();
-			color.hue = hue;
-			color.saturation = saturation;
-			color.brightness = brightness;
-			color.probability = probability;
-			return color;
-		}
-		
-		/**
-		 * Creates an RGB instance of <code>Color</code> <u>without</u> probability.
-		 * @param red  the red RGB value of the desired color
-		 * @param green  the green RGB value of the desired color
-		 * @param blue  the blue RGB value of the desired color
-		 * @return  a new <code>Color</code>
-		 */
-		public static Color fromRGB(int red, int green, int blue)
-		{
-			return fromRGB(red, green, blue, -1);
-		}
-		
-		/**
-		 * Creates an RGB instance of <code>Color</code> with probability.
-		 * @param red  the red RGB value of the desired color
-		 * @param green  the green RGB value of the desired color
-		 * @param blue  the blue RGB value of the desired color
-		 * @param probability  the probability of the color appearing in the effect
-		 * @return  a new <code>Color</code>
-		 */
-		public static Color fromRGB(int red, int green,
-				int blue, double probability)
-		{
-			float[] hsb = new float[3];
-			java.awt.Color.RGBtoHSB(red, green, blue, hsb);
-			Color color = new Color();
-			color.hue = (int)(hsb[0] * 360);
-			color.saturation = (int)(hsb[1] * 100);
-			color.brightness = (int)(hsb[2] * 100);
-			color.probability = probability;
-			return color;
-		}
-		
-		/**
-		 * Get the hue of the color.
-		 * @return  the hue
-		 */
-		public int getHue()
-		{
-			return this.hue;
-		}
-		
-		/**
-		 * Set the hue of the color.
-		 * @param hue  the desired hue
-		 */
-		public void setHue(int hue)
-		{
-			this.hue = hue;
-		}
-		
-		/**
-		 * Get the saturation of the color.
-		 * @return  the saturation
-		 */
-		public int getSaturation()
-		{
-			return this.saturation;
-		}
-		
-		/**
-		 * Set the saturation of the color.
-		 * @param saturation  the desired saturation
-		 */
-		public void setSaturation(int saturation)
-		{
-			this.saturation = saturation;
-		}
-		
-		/**
-		 * Get the brightness of the color.
-		 * @return  the brightness
-		 */
-		public int getBrightness()
-		{
-			return this.brightness;
-		}
-		
-		/**
-		 * Set the brightness of the color.
-		 * @param brightness  the desired brightness
-		 */
-		public void setBrightness(int brightness)
-		{
-			this.brightness = brightness;
-		}
-		
-		/**
-		 * Get the probability of the color.
-		 * @return  the probability
-		 */
-		public double getProbability()
-		{
-			return this.probability;
-		}
-		
-		/**
-		 * Set the probability of the color.
-		 * @param probability  the desired probability
-		 */
-		public void setProbability(double probability)
-		{
-			this.probability = probability;
-		}
-	}
-	
-	/**
-	 * Stores a frame's RGBW color and transition time.
-	 */
-	public static class Frame
-	{
-		private int r, g, b, w, t;
-		
-		/**
-		 * Creates a new instance of a <code>Frame</code>.
-		 * @param red  the red RGBW value of the frame's color
-		 * @param green  the green RGBW value of the frame's color
-		 * @param blue  the blue RGBW value of the frame's color
-		 * @param white  the white RGBW value of the frame's color
-		 * @param transitionTime  the duration of transition between
-		 * 						  the previous frame and this frame
-		 */
-		public Frame(int red, int green,
-				int blue, int white, int transitionTime)
-		{
-			this.r = red;
-			this.g = green;
-			this.b = blue;
-			this.w = white;
-			this.t = transitionTime;
-		}
-		
-		/**
-		 * Gets the red RGBW value of the frame's color.
-		 * @return  the frame's red value
-		 */
-		public int getRed()
-		{
-			return this.r;
-		}
-		
-		/**
-		 * Gets the green RGBW value of the frame's color.
-		 * @return  the frame's green value
-		 */
-		public int getGreen()
-		{
-			return this.g;
-		}
-		
-		/**
-		 * Gets the blue RGBW value of the frame's color.
-		 * @return  the frame's blue value
-		 */
-		public int getBlue()
-		{
-			return this.b;
-		}
-		
-		/**
-		 * Gets the white RGBW value of the frame's color.
-		 * @return  the frame's white value
-		 */
-		public int getWhite()
-		{
-			return this.w;
-		}
-		
-		/**
-		 * Gets the transition time of this frame (the duration of
-		 * transition between the previous frame and this frame).
-		 * @return  the frame's transition time
-		 */
-		public int getTransitionTime()
-		{
-			return this.t;
-		}
 	}
 }
