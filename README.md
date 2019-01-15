@@ -10,7 +10,7 @@ Simply add the following dependency to your ```pom.xml``` file in your project.
 <dependency>
   <groupId>io.github.rowak</groupId>
   <artifactId>nanoleaf-aurora</artifactId>
-  <version>1.2.1</version>
+  <version>1.3.1</version>
 </dependency>
 ```
 ### Manual
@@ -20,7 +20,7 @@ You can also download the [compilled jar](http://central.maven.org/maven2/io/git
 First, search for all of the Aurora devices connected to your local network, then select one from the returned list. Make sure to store the host name and port.
 ```Java
 int timeout = 5000;
-List<InetSocketAddress> auroras = Setup.findAuroras(timeout)
+List<InetSocketAddress> auroras = Setup.quickFindAuroras()
 String host = auroras.get(0).getHostName();
 int port = auroras.get(0).getPort();
 ```

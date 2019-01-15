@@ -153,7 +153,7 @@ public class Effect
 	 * @throws UnprocessableEntityException  if <code>panels</code> is malformed
 	 */
 	public static Effect createStaticEffect(String effectName,
-			Aurora.Panel[] panels, Aurora controller)
+			Panel[] panels, Aurora controller)
 					throws StatusCodeException, UnauthorizedException,
 					UnprocessableEntityException
 	{
@@ -166,7 +166,7 @@ public class Effect
 		animData.append(numPanels);
 		for (int i = 0; i < panels.length; i++)
 		{
-			Aurora.Panel panel = panels[i];
+			Panel panel = panels[i];
 			animData.append(" " + panel.getId() +
 							" 1 " +
 							panel.getRed() + " " +
@@ -301,7 +301,8 @@ public class Effect
 	 */
 	public Color[] getPalette()
 	{
-		return jsonToPalette(safeGetProperty("palette", JSONArray.class));
+		JSONArray json = safeGetProperty("palette", JSONArray.class);
+		return json != null ? jsonToPalette(json) : null;
 	}
 	
 	/**
@@ -487,7 +488,9 @@ public class Effect
 		for (Effect.Type t : Effect.Type.values())
 		{
 			if (t.toString().toLowerCase().equals(type))
+			{
 				validType = t;
+			}
 		}
 		return validType;
 	}
@@ -672,7 +675,9 @@ public class Effect
 		{
 			JSONObject jo = (JSONObject)o;
 			if (jo.get("name").equals(option))
+			{
 				optionObject = jo;
+			}
 		}
 		if (optionObject != null)
 			optionObject.put("value", value);
@@ -693,7 +698,9 @@ public class Effect
 			{
 				JSONObject jo = (JSONObject)o;
 				if (jo.get("name").equals(option))
+				{
 					return jo;
+				}
 			}
 		}
 		return null;
@@ -778,9 +785,13 @@ public class Effect
 	{
 		JSONObject propertyRange = (JSONObject)this.properties.get(property);
 		if (propertyRange != null)
+		{
 			return propertyRange.opt(maxMin);
+		}
 		else
+		{
 			return -1;
+		}
 	}
 	
 	/**

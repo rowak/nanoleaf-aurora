@@ -15,7 +15,7 @@ public class StatusCodeException extends Exception
 	}
 	
 	/**
-	 * Thrown whenever the Aurora controlller returns a 400 status code response.
+	 * Thrown when the Aurora controlller returns a 400 status code response.
 	 */
 	public class BadRequestException extends StatusCodeException
 	{
@@ -28,7 +28,7 @@ public class StatusCodeException extends Exception
 	}
 	
 	/**
-	 * Thrown whenever the Aurora controller returns a 401 status code response.
+	 * Thrown when the Aurora controller returns a 401 status code response.
 	 * Always thrown whenever the OpenAPI is called with an invalid access token.
 	 */
 	public class UnauthorizedException extends StatusCodeException
@@ -42,7 +42,7 @@ public class StatusCodeException extends Exception
 	}
 	
 	/**
-	 * Thrown whenever the Aurora controlller returns a 403 status code response.
+	 * Thrown when the Aurora controlller returns a 403 status code response.
 	 */
 	public class ForbiddenException extends StatusCodeException
 	{
@@ -55,7 +55,7 @@ public class StatusCodeException extends Exception
 	}
 	
 	/**
-	 * Thrown whenever the Aurora controlller returns a 404 status code response.
+	 * Thrown when the Aurora controlller returns a 404 status code response.
 	 * Always thrown whenever a resource is attempted to be accessed or modified
 	 * on the Aurora when it does not exist.
 	 */
@@ -70,7 +70,7 @@ public class StatusCodeException extends Exception
 	}
 	
 	/**
-	 * Thrown whenever the Aurora controlller returns a 422 status code response.
+	 * Thrown when the Aurora controlller returns a 422 status code response.
 	 * Always thrown whenever a request is sent with a body that is malformed in any way.
 	 */
 	public class UnprocessableEntityException extends StatusCodeException
@@ -84,7 +84,7 @@ public class StatusCodeException extends Exception
 	}
 	
 	/**
-	 * Thrown whenever the Aurora controlller returns a 500 status code response.
+	 * Thrown when the Aurora controlller returns a 500 status code response.
 	 */
 	public class InternalServerErrorException extends StatusCodeException
 	{

@@ -9,6 +9,7 @@ import io.github.rowak.Aurora;
 import io.github.rowak.Effect;
 import io.github.rowak.Frame;
 import io.github.rowak.StatusCodeException;
+import io.github.rowak.Panel;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 
 /**
@@ -17,7 +18,7 @@ import io.github.rowak.StatusCodeException.UnauthorizedException;
  */
 public class StaticEffectBuilder
 {
-	private Aurora.Panel[] panels;
+	private Panel[] panels;
 	private Map<Integer, Frame> frames;
 	
 	/**
@@ -49,7 +50,7 @@ public class StaticEffectBuilder
 		{
 			if (ids.contains(panels[i].getId()))
 			{
-				Aurora.Panel panel = panels[i];
+				Panel panel = panels[i];
 				Frame frame = frames.get(panel.getId());
 				data.append(" " + panel.getId() + " 1");
 				data.append(" " +
@@ -64,26 +65,33 @@ public class StaticEffectBuilder
 	}
 	
 	/**
-	 * Add a new frame (RGBW color and transition time) to the effect.
+	 * Adds a new frame (RGBW color and transition time) to the effect.
 	 * @param panel  the panel to add the frame to
 	 * @param frame  the RGBW color and transition time
 	 * @return  the current <code>StaticEffectBuilder</code>
 	 */
-	public StaticEffectBuilder setPanel(Aurora.Panel panel, Frame frame)
+	public StaticEffectBuilder setPanel(Panel panel, Frame frame)
 	{
-		this.frames.put(panel.getId(), frame);
-		return this;
+		return setPanel(panel.getId(), frame);
 	}
 	
 	/**
-	 * Add a new frame (RGBW color and transition time) to the effect.
+	 * Adds a new frame (RGBW color and transition time) to the effect.
 	 * @param panelId  the panelId of the panel to add the frame to
 	 * @param frame  the RGBW color and transition time
 	 * @return the current <code>StaticEffectBuilder</code>
 	 */
 	public StaticEffectBuilder setPanel(int panelId, Frame frame)
 	{
-		this.frames.put(panelId, frame);
+		if (panelIdIsValid(panelId))
+		{
+			this.frames.put(panelId, frame);
+		}
+		else
+		{
+			throw new IllegalArgumentException("Panel with id " +
+					panelId + " does not exist.");
+		}
 		return this;
 	}
 	
@@ -94,10 +102,22 @@ public class StaticEffectBuilder
 	 */
 	public StaticEffectBuilder setAllPanels(Frame frame)
 	{
-		for (Aurora.Panel panel : this.panels)
+		for (Panel panel : this.panels)
 		{
 			this.frames.put(panel.getId(), frame);
 		}
 		return this;
+	}
+	
+	private boolean panelIdIsValid(int panelId)
+	{
+		for (Panel p : panels)
+		{
+			if (p.getId() == panelId)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

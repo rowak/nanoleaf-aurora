@@ -5,14 +5,13 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.github.kevinsawicki.http.HttpRequest;
+import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.StatusCodeException.ResourceNotFoundException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
@@ -47,10 +46,11 @@ public class Aurora
 	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: /api/v1/)
 	 * @param accessToken  a unique authentication token
 	 * @throws UnauthorizedException  if the access token is invalid
+	 * @throws HttpRequestException  if the connection to the Aurora times out
 	 */
 	public Aurora(String hostName, int port,
-			String apiLevel, String accessToken)
-					throws StatusCodeException, UnauthorizedException
+			String apiLevel, String accessToken) throws StatusCodeException, 
+			UnauthorizedException, HttpRequestException
 	{
 		init(hostName, port, apiLevel, accessToken);
 	}
@@ -61,10 +61,11 @@ public class Aurora
 	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: /api/v1/)
 	 * @param accessToken  a unique authentication token
 	 * @throws UnauthorizedException  if the access token is invalid
+	 * @throws HttpRequestException  if the connection to the Aurora times out
 	 */
 	public Aurora(InetSocketAddress host,
-			String apiLevel, String accessToken)
-					throws StatusCodeException, UnauthorizedException
+			String apiLevel, String accessToken) throws StatusCodeException,
+			UnauthorizedException, HttpRequestException
 	{
 		init(host.getHostName(), host.getPort(), apiLevel, accessToken);
 	}
@@ -77,10 +78,11 @@ public class Aurora
 	 * 					(for example: "v1" or "beta")
 	 * @param accessToken  a unique authentication token
 	 * @throws UnauthorizedException  if the access token is invalid
+	 * @throws HttpRequestException  if the connection to the Aurora times out
 	 */
 	private void init(String hostName, int port,
-			String apiLevel, String accessToken)
-					throws StatusCodeException, UnauthorizedException
+			String apiLevel, String accessToken) throws StatusCodeException,
+			UnauthorizedException, HttpRequestException
 	{
 		this.hostName = hostName;
 		this.apiLevel = apiLevel;
@@ -93,7 +95,7 @@ public class Aurora
 		this.rhythm = new Rhythm();
 		this.externalStreaming = new ExternalStreaming();
 		
-		HttpRequest req = HttpRequest.get(getURL(""));
+		HttpRequest req = get(getURL(""));
 		int code = req.code();
 		checkStatusCode(code);
 		String body = req.body();
@@ -244,7 +246,7 @@ public class Aurora
 	 */
 	public int identify() throws StatusCodeException, UnauthorizedException
 	{
-		HttpRequest req = HttpRequest.put(getURL("identify"));
+		HttpRequest req = put(getURL("identify"), null);
 		checkStatusCode(req.code());
 		return req.code();
 	}
@@ -261,7 +263,7 @@ public class Aurora
 		 */
 		public boolean getOn() throws StatusCodeException
 		{
-			return Boolean.parseBoolean(HttpRequest.get(getURL("state/on/value")).body());
+			return Boolean.parseBoolean(get(getURL("state/on/value")).body());
 		}
 		
 		/**
@@ -274,7 +276,7 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException
 		{
 			String body = String.format("{\"on\": {\"value\": %b}}", on);
-			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
+			HttpRequest req = put(getURL("state"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -296,7 +298,7 @@ public class Aurora
 		 */
 		public int getBrightness() throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/brightness/value")).body());
+			return Integer.parseInt(get(getURL("state/brightness/value")).body());
 		}
 		
 		/**
@@ -311,7 +313,7 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
 		{
 			String body = String.format("{\"brightness\": {\"value\": %d}}", brightness);
-			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
+			HttpRequest req = put(getURL("state"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -330,9 +332,36 @@ public class Aurora
 		{
 			String body = String.format("{\"brightness\": {\"value\": %d, \"duration\": %d}}",
 					brightness, duration);
-			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
+			HttpRequest req = put(getURL("state"), body);
 			checkStatusCode(req.code());
 			return req.code();
+		}
+		
+		/**
+		 * Increases the brightness by an amount as a percent.
+		 * @param amount  the amount to increase by
+		 * @return  (204 No Content, 401 Unauthorized, 422 Unprocessable Entity)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 */
+		public int increaseBrightness(int amount)
+				throws StatusCodeException, UnauthorizedException
+		{
+			String body = String.format("{\"brightness\": {\"increment\": %d}}", amount);
+			HttpRequest req = put(getURL("state"), body);
+			checkStatusCode(req.code());
+			return req.code();
+		}
+		
+		/**
+		 * Decreases the brightness by an amount as a percent.
+		 * @param amount  the amount to decrease by
+		 * @return  (204 No Content, 401 Unauthorized, 422 Unprocessable Entity)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 */
+		public int decreaseBrightness(int amount)
+				throws StatusCodeException, UnauthorizedException
+		{
+			return increaseBrightness(-amount);
 		}
 		
 		/**
@@ -342,7 +371,7 @@ public class Aurora
 		 */
 		public int getMaxBrightness() throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/brightness/max")).body());
+			return Integer.parseInt(get(getURL("state/brightness/max")).body());
 		}
 		
 		/**
@@ -352,7 +381,7 @@ public class Aurora
 		 */
 		public int getMinBrightness() throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/brightness/min")).body());
+			return Integer.parseInt(get(getURL("state/brightness/min")).body());
 		}
 		
 		/**
@@ -362,7 +391,7 @@ public class Aurora
 		 */
 		public int getHue() throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/hue/value")).body());
+			return Integer.parseInt(get(getURL("state/hue/value")).body());
 		}
 		
 		/**
@@ -377,7 +406,7 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
 		{
 			String body = String.format("{\"hue\": {\"value\": %d}}", hue);
-			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
+			HttpRequest req = put(getURL("state"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -389,7 +418,7 @@ public class Aurora
 		 */
 		public int getMaxHue() throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/hue/max")).body());
+			return Integer.parseInt(get(getURL("state/hue/max")).body());
 		}
 		
 		/**
@@ -399,7 +428,7 @@ public class Aurora
 		 */
 		public int getMinHue() throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/hue/min")).body());
+			return Integer.parseInt(get(getURL("state/hue/min")).body());
 		}
 		
 		/**
@@ -409,7 +438,7 @@ public class Aurora
 		 */
 		public int getSaturation() throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/sat/value")).body());
+			return Integer.parseInt(get(getURL("state/sat/value")).body());
 		}
 		
 		/**
@@ -424,7 +453,7 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
 		{
 			String body = String.format("{\"sat\": {\"value\": %d}}", saturation);
-			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
+			HttpRequest req = put(getURL("state"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -437,7 +466,7 @@ public class Aurora
 		public int getMaxSaturation()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/sat/max")).body());
+			return Integer.parseInt(get(getURL("state/sat/max")).body());
 		}
 		
 		/**
@@ -448,7 +477,7 @@ public class Aurora
 		public int getMinSaturation()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/sat/min")).body());
+			return Integer.parseInt(get(getURL("state/sat/min")).body());
 		}
 		
 		/**
@@ -459,7 +488,7 @@ public class Aurora
 		public int getColorTemperature()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/ct/value")).body());
+			return Integer.parseInt(get(getURL("state/ct/value")).body());
 		}
 		
 		/**
@@ -474,7 +503,7 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
 		{
 			String body = String.format("{\"ct\": {\"value\": %d}}", colorTemperature);
-			HttpRequest req = HttpRequest.put(getURL("state")).send(body);
+			HttpRequest req = put(getURL("state"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -487,7 +516,7 @@ public class Aurora
 		public int getMaxColorTemperature()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/ct/max")).body());
+			return Integer.parseInt(get(getURL("state/ct/max")).body());
 		}
 		
 		/**
@@ -498,7 +527,7 @@ public class Aurora
 		public int getMinColorTemperature()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("state/ct/min")).body());
+			return Integer.parseInt(get(getURL("state/ct/min")).body());
 		}
 		
 		/**
@@ -509,7 +538,7 @@ public class Aurora
 		public String getColorMode()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return HttpRequest.get(getURL("state/colorMode")).body().replace("\"", "");
+			return get(getURL("state/colorMode")).body().replace("\"", "");
 		}
 	}
 	
@@ -525,7 +554,19 @@ public class Aurora
 		 */
 		public String getCurrentEffectName() throws UnauthorizedException
 		{
-			return HttpRequest.get(getURL("effects/select")).body().replace("\"", "");
+			return get(getURL("effects/select")).body().replace("\"", "");
+		}
+		
+		/**
+		 * Gets the currently selected effect as an <code>Effect</code> object.
+		 * @return  the effect object
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws ResourceNotFoundException  if the effect does not exist
+		 */
+		public Effect getCurrentEffect() throws StatusCodeException,
+			UnauthorizedException, ResourceNotFoundException
+		{
+			return getEffect(getCurrentEffectName());
 		}
 		
 		/**
@@ -543,7 +584,7 @@ public class Aurora
 			UnauthorizedException, ResourceNotFoundException, UnprocessableEntityException
 		{
 			String body = String.format("{\"select\": \"%s\"}", effectName);
-			HttpRequest req = HttpRequest.put(getURL("effects")).send(body);
+			HttpRequest req = put(getURL("effects"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -575,7 +616,7 @@ public class Aurora
 		 */
 		public String[] getEffectsList() throws StatusCodeException, UnauthorizedException
 		{
-			JSONObject json = new JSONObject(HttpRequest.get(getURL("effects")).body());
+			JSONObject json = new JSONObject(get(getURL("effects")).body());
 			JSONArray arr = json.getJSONArray("effectsList");
 			String[] effects = new String[arr.length()];
 			for (int i = 0; i < arr.length(); i++)
@@ -596,7 +637,7 @@ public class Aurora
 				UnauthorizedException, ResourceNotFoundException
 		{
 			String body = String.format("{\"write\": {\"command\": \"request\", \"animName\": \"%s\"}}", effectName);
-			HttpRequest req = HttpRequest.put(getURL("effects")).send(body);
+			HttpRequest req = put(getURL("effects"), body);
 			checkStatusCode(req.code());
 			return Effect.fromJSON(req.body());
 		}
@@ -682,7 +723,7 @@ public class Aurora
 		 * 										 one or more invalid instance variables (causing
 		 * 										 the <code>JSON</code> output to be invalid)
 		 */
-		public int previewEffect(Effect effect) throws StatusCodeException,
+		public int displayEffect(Effect effect) throws StatusCodeException,
 				UnauthorizedException, UnprocessableEntityException
 		{
 			return writeEffect(String.format(effect.toJSON("display")));
@@ -699,7 +740,7 @@ public class Aurora
 		 * @throws ResourceNotFoundException  if the effect <code>effectName</code>
 		 * 									  is not found on the Aurora controller
 		 */
-		public int previewEffectFor(String effectName, int duration)
+		public int displayEffectFor(String effectName, int duration)
 				throws StatusCodeException, UnauthorizedException
 		{
 			return writeEffect(String.format("{\"command\": \"displayTemp\", \"duration\": %d, \"animName\": \"%s\"}",
@@ -778,7 +819,7 @@ public class Aurora
 			custom.setAnimData("1 " + panelId + " 1 " +
 					red + " " + green + " " + blue + " 0 " + transitionTime);
 			custom.setLoop(false);
-			return previewEffect(custom);
+			return displayEffect(custom);
 		}
 		
 		/**
@@ -821,8 +862,8 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
 		{
 			CustomEffectBuilder ceb = new CustomEffectBuilder(Aurora.this);
-			ceb.setAllPanels(new Frame(red, green, blue, 0, duration));
-			return previewEffect(ceb.build("", false));
+			ceb.addFrameToAllPanels(new Frame(red, green, blue, 0, duration));
+			return displayEffect(ceb.build("", false));
 		}
 		
 		/**
@@ -872,7 +913,7 @@ public class Aurora
 				UnauthorizedException, UnprocessableEntityException
 		{
 			String body = String.format("{\"write\": %s}", command);
-			HttpRequest req = HttpRequest.put(getURL("effects")).send(body);
+			HttpRequest req = put(getURL("effects"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -893,7 +934,7 @@ public class Aurora
 		public int getNumPanels(boolean includeRhythm)
 				throws StatusCodeException, UnauthorizedException
 		{
-			int numPanels = Integer.parseInt(HttpRequest.get(getURL("panelLayout/layout/numPanels")).body());
+			int numPanels = Integer.parseInt(get(getURL("panelLayout/layout/numPanels")).body());
 			if (!includeRhythm || !Aurora.this.rhythm.getConnected())
 				numPanels--;
 			return numPanels;
@@ -906,7 +947,7 @@ public class Aurora
 		 */
 		public int getSideLength() throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("panelLayout/layout/sideLength")).body());
+			return Integer.parseInt(get(getURL("panelLayout/layout/sideLength")).body());
 		}
 		
 		/**
@@ -918,7 +959,7 @@ public class Aurora
 		public Panel[] getPanels()
 				throws StatusCodeException, UnauthorizedException
 		{
-			JSONObject json = new JSONObject(HttpRequest.get(getURL("panelLayout/layout")).body());
+			JSONObject json = new JSONObject(get(getURL("panelLayout/layout")).body());
 			JSONArray arr = json.getJSONArray("positionData");
 			Panel[] pd = new Panel[arr.length()];
 			for (int i = 0; i < arr.length(); i++)
@@ -961,7 +1002,7 @@ public class Aurora
 		public int getGlobalOrientation()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("panelLayout/globalOrientation/value")).body());
+			return Integer.parseInt(get(getURL("panelLayout/globalOrientation/value")).body());
 		}
 		
 		/**
@@ -974,7 +1015,7 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException
 		{
 			String body = String.format("{\"globalOrientation\": {\"value\": %d}}", orientation);
-			HttpRequest req = HttpRequest.put(getURL("panelLayout")).send(body);
+			HttpRequest req = put(getURL("panelLayout"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -987,7 +1028,7 @@ public class Aurora
 		public int getMaxGlobalOrientation()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("panelLayout/globalOrientation/max")).body());
+			return Integer.parseInt(get(getURL("panelLayout/globalOrientation/max")).body());
 		}
 		
 		/**
@@ -998,7 +1039,7 @@ public class Aurora
 		public int getMinGlobalOrientation()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("panelLayout/globalOrientation/min")).body());
+			return Integer.parseInt(get(getURL("panelLayout/globalOrientation/min")).body());
 		}
 	}
 	
@@ -1015,7 +1056,7 @@ public class Aurora
 		public boolean getConnected()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Boolean.parseBoolean(HttpRequest.get(getURL("rhythm/rhythmConnected")).body());
+			return Boolean.parseBoolean(get(getURL("rhythm/rhythmConnected")).body());
 		}
 		
 		/**
@@ -1026,7 +1067,7 @@ public class Aurora
 		public boolean getActive()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Boolean.parseBoolean(HttpRequest.get(getURL("rhythm/rhythmActive")).body());
+			return Boolean.parseBoolean(get(getURL("rhythm/rhythmActive")).body());
 		}
 		
 		/**
@@ -1037,7 +1078,7 @@ public class Aurora
 		public int getId()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("rhythm/rhythmId")).body());
+			return Integer.parseInt(get(getURL("rhythm/rhythmId")).body());
 		}
 		
 		/**
@@ -1048,7 +1089,7 @@ public class Aurora
 		public String getHardwareVersion()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return HttpRequest.get(getURL("rhythm/hardwareVersion")).body();
+			return get(getURL("rhythm/hardwareVersion")).body();
 		}
 		
 		/**
@@ -1059,7 +1100,7 @@ public class Aurora
 		public String getFirmwareVersion()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return HttpRequest.get(getURL("rhythm/firmwareVersion")).body();
+			return get(getURL("rhythm/firmwareVersion")).body();
 		}
 		
 		/**
@@ -1070,7 +1111,7 @@ public class Aurora
 		public boolean auxAvailable()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Boolean.parseBoolean(HttpRequest.get(getURL("rhythm/auxAvailable")).body());
+			return Boolean.parseBoolean(get(getURL("rhythm/auxAvailable")).body());
 		}
 		
 		/**
@@ -1082,7 +1123,7 @@ public class Aurora
 		public int getMode()
 				throws StatusCodeException, UnauthorizedException
 		{
-			return Integer.parseInt(HttpRequest.get(getURL("rhythm/rhythmMode")).body());
+			return Integer.parseInt(get(getURL("rhythm/rhythmMode")).body());
 		}
 		
 		/**
@@ -1097,7 +1138,7 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException, UnprocessableEntityException
 		{
 			String body = String.format("{\"rhythmMode\": %d}", mode);
-			HttpRequest req = HttpRequest.put(getURL("rhythm")).send(body);
+			HttpRequest req = put(getURL("rhythm"), body);
 			checkStatusCode(req.code());
 			return req.code();
 		}
@@ -1110,7 +1151,7 @@ public class Aurora
 		public Position getPosition()
 				throws StatusCodeException, UnauthorizedException
 		{
-			JSONObject json = new JSONObject(HttpRequest.get(getURL("rhythm/rhythmPos")).body());
+			JSONObject json = new JSONObject(get(getURL("rhythm/rhythmPos")).body());
 			int x = json.getInt("x");
 			int y = json.getInt("y");
 			int o = json.getInt("o");
@@ -1146,7 +1187,7 @@ public class Aurora
 		public void enable() throws StatusCodeException
 		{
 			String body = "{\"write\": {\"command\": \"display\", \"animType\": \"extControl\"}}";
-			HttpRequest req = HttpRequest.put(getURL("effects")).send(body);
+			HttpRequest req = put(getURL("effects"), body);
 			checkStatusCode(req.code());
 			JSONObject response = new JSONObject(req.body());
 			String host = response.getString("streamControlIpAddr");
@@ -1252,224 +1293,29 @@ public class Aurora
 		}
 	}
 	
-	/**
-	 * Represents a position on the Aurora panel grid.
-	 * Used to store <code>JSON</code>-parsed data.
-	 */
-	public class Position
+	private HttpRequest get(String url)
 	{
-		private int x, y, orientation;
-		
-		/**
-		 * Creates a new instance of Position with an x, y
-		 * position and orientation.
-		 * @param x  the x-value on the grid
-		 * @param y  the y-value on the grid
-		 * @param orientation  the orientation on the grid in degrees
-		 */
-		public Position(int x, int y, int orientation)
-		{
-			this.x = x;
-			this.y = y;
-			this.orientation = orientation;
-		}
-		
-		/**
-		 * Gets the x-value of this position.
-		 * @return  the x-value
-		 */
-		public int getX()
-		{
-			return this.x;
-		}
-		
-		/**
-		 * Gets the y-value of this position.
-		 * @return  the y-value
-		 */
-		public int getY()
-		{
-			return this.y;
-		}
-		
-		/**
-		 * Gets the orientation of this position in degrees.
-		 * @return  the orientation
-		 */
-		public int getOrientation()
-		{
-			return this.orientation;
-		}
+		HttpRequest req = HttpRequest.get(url);
+		req.connectTimeout(2000);
+		return req;
 	}
 	
-	/**
-	 * Represents a single Aurora light panel. Used to
-	 * store <code>JSON</code>-parsed data.
-	 */
-	public class Panel extends Position
+	private HttpRequest post(String url, String json)
 	{
-		private int id, r, g, b, w;
-		
-		/**
-		 * Creates a new instance of a <code>Panel</code>.
-		 * @param id  the id of the panel
-		 * @param x  the x-value of the panel location
-		 * @param y  the y-value of the panel location
-		 * @param orientation  the panel's orientation on the Aurora grid
-		 */
-		public Panel(int id, int x, int y, int orientation)
-		{
-			super(x, y, orientation);
-			this.id = id;
-		}
-		
-		/**
-		 * Gets the unique ID for the panel.
-		 * @return  the panel's unique ID
-		 */
-		public int getId()
-		{
-			return this.id;
-		}
-		
-		/**
-		 * Gets the red RGBW value of the panel's color.
-		 * @return  the panel's red value
-		 */
-		public int getRed()
-		{
-			return this.r;
-		}
-		
-		/**
-		 * Sets the red RGBW value of the panel's color.
-		 * @param value  the red RGBW value
-		 */
-		public void setRed(int value)
-		{
-			this.r = value;
-		}
-		
-		/**
-		 * Gets the green RGBW value of the panel's color.
-		 * @return  the panel's green value
-		 */
-		public int getGreen()
-		{
-			return this.g;
-		}
-		
-		/**
-		 * Sets the green RGBW value of the panel's color.
-		 * @param value  the green RGBW value
-		 */
-		public void setGreen(int value)
-		{
-			this.g = value;
-		}
-		
-		/**
-		 * Gets the blue RGBW value of the panel's color.
-		 * @return  the panel's blue value
-		 */
-		public int getBlue()
-		{
-			return this.b;
-		}
-		
-		/**
-		 * Sets the blue RGBW value of the panel's color.
-		 * @param value  the blue RGBW value
-		 */
-		public void setBlue(int value)
-		{
-			this.b = value;
-		}
-		
-		/**
-		 * Gets the white RGBW value of the panel's color.
-		 * @return  the panel's white value
-		 */
-		public int getWhite()
-		{
-			return this.w;
-		}
-		
-		/**
-		 * Sets the white RGBW value of the panel's color.
-		 * @param value  the white RGBW value
-		 */
-		public void setWhite(int value)
-		{
-			this.w = value;
-		}
-		
-		/**
-		 * Sets the RGB values of this panel's color.
-		 * @param red  the red RGBW value
-		 * @param green  the green RGBW value
-		 * @param blue  the blue RGBW value
-		 */
-		public void setRGB(int red, int green, int blue)
-		{
-			this.r = red;
-			this.g = green;
-			this.b = blue;
-		}
-		
-		/**
-		 * Sets the RGBW values of the panel's color.
-		 * @param red  the red RGBW value
-		 * @param green  the green RGBW value
-		 * @param blue  the blue RGBW value
-		 * @param white  the white RGBW value
-		 */
-		public void setRGBW(int red, int green,
-				int blue, int white)
-		{
-			setRGB(red, green, blue);
-			this.w = white;
-		}
-		
-		/**
-		 * Gets the direct neighbors of a panel (maximum is 3, minimum is 1).
-		 * @param panels  all connected panels in the Aurora.
-		 * @return  an array of type <code>Panel</code> containing the
-		 * 			direct neighbors of this panel
-		 */
-		public Panel[] getNeighbors(Panel[] panels)
-		{
-			// Distance constant represents the vertical/horizontal/diagonal distance
-			// that all neighboring panels are within
-			final int DISTANCE_CONST = 86;
-			List<Panel> neighbors = new ArrayList<Panel>();
-			int p1x = this.getX();
-			int p1y = this.getY();
-			for (Panel p2 : panels)
-			{
-				int p2x = p2.getX();
-				int p2y = p2.getY();
-				if (Math.floor(Math.sqrt(Math.pow((p1x - p2x), 2) +
-						Math.pow((p1y - p2y), 2))) == DISTANCE_CONST)
-				{
-					neighbors.add(p2);
-				}
-			}
-			return neighbors.toArray(new Panel[]{});
-		}
-		
-		/**
-		 * Gets the direct neighbors of a panel (maximum is 3, minimum is 1).
-		 * @param aurora  the Aurora to get the panels from
-		 * @return  an array of type <code>Panel</code> containing the
-		 * 			direct neighbors of this panel
-		 * @throws UnauthorizedException  if the access token is invalid
-		 */
-		public Panel[] getNeighbors(Aurora aurora)
-				throws StatusCodeException, UnauthorizedException
-		{
-			return this.getNeighbors(aurora.panelLayout.getPanels());
-		}
+		HttpRequest req = HttpRequest.post(url);
+		req.connectTimeout(2000);
+		if (json != null)
+			req.send(json);
+		return req;
+	}
+	
+	private HttpRequest put(String url, String json)
+	{
+		HttpRequest req = HttpRequest.put(url);
+		req.connectTimeout(2000);
+		if (json != null)
+			req.send(json);
+		return req;
 	}
 	
 	/**
