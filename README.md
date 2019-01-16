@@ -1,5 +1,5 @@
 # Nanoleaf Aurora Java API
-A java wrapper and JSON parser for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional high-level helper methods and classes to make your life easier. The API is designed to be simpler to use than the official API by abstracting the use of JSON data.
+A java interface/wrapper and JSON parser for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional high-level helper methods and classes to make your life easier. The API is designed to be simpler to use than the official API by abstracting the use of JSON data.
 
 ## [Documentation](https://raw.githack.com/rowak/nanoleaf-aurora/master/doc/index.html)
 
@@ -37,10 +37,10 @@ Finally you can create an ```Aurora``` object.
 Aurora aurora = new Aurora(host, port, apiLevel, accessToken);
 ```
 
-Note: You can also directly create a new ```Aurora``` object if you already have an access token and you know the host, port, and apiLevel of your Aurora.
+Note: You can also directly create a new Aurora object if you already have an access token and you know the host, port, and apiLevel of your Aurora.
 
 ## Controlling the Aurora
-Once you have created an ```Aurora``` object, you can start using its methods.
+Once you have created an Aurora object, you can start using its methods.
 ### State
 Contains basic methods used for getting and setting Aurora state information (brightness, color, etc). Below are a few examples.
 #### On/Off
@@ -116,18 +116,14 @@ Changing json data in effects that you upload to your Aurora can cause the Nanol
 ## Effect Builders
 Effect builders are small helper classes that assist in creating effects programatically. These classes implement the ```EffectBuilder``` interface except for the ```CustomEffectBuilder``` and the ```StaticEffectBuilder```.
 ### The CustomEffectBuilder
-The ```CustomEffectBuilder``` class is a more advanced helper class that assists in the creation of ```custom```-type effects. Animation frames are added to the builder object using the ```CustomEffectBuilder.addFrame()``` method. This method adds a frame for only **one** panel at a time. Once all of the frames have been defined, an ```Effect``` object can be built from the animation object using the ```CustomEffectBuilder.build()``` method.
+The ```CustomEffectBuilder``` class is a more advanced helper class that assists in the creation of ```custom```-type effects. Animation frames are added to the builder object using the ```CustomEffectBuilder.addFrame()``` method. This method adds a frame for only **one** panel at a time. You can also add a frame to all of the panels using the ```CustomEffectBuilder.addFrameToAllPanels()``` method. Once all of the frames have been defined, an ```Effect``` object can be built from the animation object using the ```CustomEffectBuilder.build()``` method.
 #### Example
 ```Java
-Panel[] panels = aurora.panelLayout().getPanels();              // creates a new array of type Panel, containing all of the connected Panel data
-CustomEffectBuilder builder = new CustomEffectBuilder(aurora);  // creates an instance of the effect builder object
-for (Panel panel : panels)
-{
-  builder.addFrame(panel, new Frame(255, 0, 255, 0, 20));       // add a new frame to the animation (for each panel). Frame takes 5 arguments: red, green, blue, white, and transitionTime
-  builder.addFrame(panel, new Frame(0, 255, 255, 0, 20));       // add a new frame to the animation (for each panel). Frame takes 5 arguments: red, green, blue, white, and transitionTime
-}
-Effect effect = builder.build("My Animation", true);            // builds the animation data and saves it to a new custom-type effect
-aurora.effects().addEffect(effect);                             // uploads the new effect to the Aurora
+Effect effect = new CustomEffectBuilder(aurora)                      // creates an instance of the effect builder object
+                .addFrameToAllPanels(new Frame(255, 0, 255, 0, 20))  // adds a new frame to the animation for each panel. Frame takes 5 arguments: red, green, blue, white, and transitionTime
+                .addFrameToAllPanels(new Frame(0, 255, 255, 0, 20))  // adds a new frame to the animation for each panel. Frame takes 5 arguments: red, green, blue, white, and transitionTime
+                .build("My Animation", true);                        // builds the animation data and saves it to the effect object
+aurora.effects().addEffect(effect);                                  // uploads the new effect to the Aurora
 ```
 
 ## StatusCodeExceptions
@@ -144,3 +140,6 @@ Indicates that the resource that was requested from the Aurora does not exist. A
 Indicates that the body content of a request is invalid. If this exception is thrown, one or more arguments may have been invalid when an API method was called.
 ### 500 - Internal Server Error
 I'm not sure what exactly causes this error, but something goes wrong inside the Aurora (this exception can only be thrown by the ``Setup.destroyAccessToken()`` method).
+
+## HttpRequestException
+An HttpRequestException might be thrown by any of the methods in the Aurora class that need to communicate with the physical aurora. However, an HttpRequestException can only be thrown by these methods if the aurora cannot be connected to *after* the aurora object is initialized. An HttpRequestException will also be thrown when the aurora object is created if the physical aurora cannot be connected to.
