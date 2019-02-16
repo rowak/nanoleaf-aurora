@@ -31,16 +31,16 @@ public class Setup
 	/**
 	 * Searches for Aurora devices on the local network using SSDP.
 	 * @param timeout  the amount of time (in milliseconds) to spend searching for Aurora devices
-	 * @return  a collection of type <code>InetSocketAddress</code>,
-	 * 			with each element representing an Aurora controller
+	 * @return  a collection of type <code>AuroraMetadata</code>,
+	 * 			with each element containing the metadata of an Aurora controller
 	 * @throws IOException  unknown IO exception
 	 * @throws SocketTimeoutException  (inevitable) once the socket's timeout reaches <code>timeout</code>
 	 * @throws UnknownHostException  if the host's local address cannot be found
 	 */
-	public static List<InetSocketAddress> findAuroras(int timeout)
+	public static List<AuroraMetadata> findAuroras(int timeout)
 			throws IOException, SocketTimeoutException, UnknownHostException
 	{
-		List<InetSocketAddress> auroras = new ArrayList<InetSocketAddress>();
+		List<AuroraMetadata> auroras = new ArrayList<AuroraMetadata>();
 		
 		StringBuilder request = new StringBuilder();
 		request.append("M-SEARCH * HTTP/1.1\r\n");
@@ -96,15 +96,12 @@ public class Setup
 					responsePacket = new DatagramPacket(new byte[1536], 1536);
 					socket.receive(responsePacket);
 					String data = new String(responsePacket.getData());
-					String[] address = data.substring(data.indexOf("Location:")+17,
-							data.indexOf("nl-deviceid:")-2).split(":");
-					String ip = address[0];
-					int port = Integer.parseInt(address[1]);
-					auroras.add(new InetSocketAddress(ip, port));
+					AuroraMetadata metadata = AuroraMetadata.fromPacketData(data);
+					auroras.add(metadata);
 				}
 				catch (NumberFormatException nfe)
 				{
-					throw new NumberFormatException("Malformed response packet.");
+					throw new NumberFormatException("Malformed response packet. Bad port.");
 				}
 				catch (IOException ioe)
 				{
@@ -129,8 +126,8 @@ public class Setup
 	
 	/**
 	 * Gets Aurora devices on the local network using the nanoleaf internal api.<br>
-	 * <b>Warning: This method of finding auroras is not officially supported or
-	 * documented by Nanoleaf.</b>
+	 * <b>Warning: This method of finding auroras uses the Nanoleaf backend api and
+	 * is not officially supported or documented by Nanoleaf.</b>
 	 * @return  a collection of type <code>InetSocketAddress</code>,
 	 * 			with each element representing an Aurora controller
 	 */

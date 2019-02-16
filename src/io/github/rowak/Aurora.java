@@ -43,7 +43,7 @@ public class Aurora
 	 * Creates a new instance of the Aurora controller.
 	 * @param hostName  the hostname of the Aurora controller
 	 * @param port  the port of the Aurora controller (default=16021)
-	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: /api/v1/)
+	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: v1)
 	 * @param accessToken  a unique authentication token
 	 * @throws UnauthorizedException  if the access token is invalid
 	 * @throws HttpRequestException  if the connection to the Aurora times out
@@ -58,7 +58,7 @@ public class Aurora
 	/**
 	 * Creates a new instance of the Aurora controller.
 	 * @param host  the <code>InetAddress</code> of the host
-	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: /api/v1/)
+	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: v1)
 	 * @param accessToken  a unique authentication token
 	 * @throws UnauthorizedException  if the access token is invalid
 	 * @throws HttpRequestException  if the connection to the Aurora times out
@@ -68,6 +68,21 @@ public class Aurora
 			UnauthorizedException, HttpRequestException
 	{
 		init(host.getHostName(), host.getPort(), apiLevel, accessToken);
+	}
+	
+	/**
+	 * Creates a new instance of the Aurora controller.
+	 * @param metadata  the <code>AuroraMetadata</code> associated with the Aurora controller
+	 * @param apiLevel  the current version of the Aurora OpenAPI (for example: v1)
+	 * @param accessToken  a unique authentication token
+	 * @throws UnauthorizedException  if the access token is invalid
+	 * @throws HttpRequestException  if the connection to the Aurora times out
+	 */
+	public Aurora(AuroraMetadata metadata,
+			String apiLevel, String accessToken) throws StatusCodeException,
+			UnauthorizedException, HttpRequestException
+	{
+		init(metadata.getHostName(), metadata.getPort(), apiLevel, accessToken);
 	}
 	
 	/**
@@ -882,6 +897,27 @@ public class Aurora
 			java.awt.Color color = java.awt.Color.decode(hexColor);
 			return fadeToColor(color.getRed(),
 					color.getGreen(), color.getBlue(), duration);
+		}
+		
+		/**
+		 * Gets <i>all</i> the plugins/motions from the Aurora.
+		 * <br><b>Note: This method is slow.</b>
+		 * @return  an array of plugins from the Aurora
+		 * @throws UnauthorizedException  if the access token is invalid
+		 */
+		public Plugin[] getPlugins() throws UnauthorizedException, StatusCodeException
+		{
+			String body = String.format("{\"write\": {\"command\": \"requestPlugins\"}}");
+			HttpRequest req = put(getURL("effects"), body);
+			checkStatusCode(req.code());
+			JSONObject json = new JSONObject(req.body());
+			JSONArray arr = json.getJSONArray("plugins");
+			Plugin[] plugins = new Plugin[arr.length()];
+			for (int i = 0; i < arr.length(); i++)
+			{
+				plugins[i] = Plugin.fromJSON(arr.getJSONObject(i).toString());
+			}
+			return plugins;
 		}
 		
 		/**

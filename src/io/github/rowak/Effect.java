@@ -11,16 +11,13 @@ import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.StatusCodeException.UnprocessableEntityException;
 
 /**
- * A <i>local</i> interface for an Aurora <code>Effect</code>.
+ * A <i>local</i> interface for an Aurora effect.
  * Setter methods in this class will not have an effect on the Aurora.
  */
 public class Effect
 {
 	/**
-	 * The names of the available effect properties.
-	 * <br><b>Note: Plugin options are not fully supported by the api.
-	 * They can still be accessed and modified however using the
-	 * {@link #getPluginOptions()} method.</b>
+	 * Names of the available effect properties.
 	 */
 	private static final String[] PROPERTIES_NAMES =
 		{
@@ -31,7 +28,7 @@ public class Effect
 			"direction", "loop"
 		};
 	/**
-	 * The stored properties for the local effect object.
+	 * Properties for the local effect object.
 	 */
 	private Map<Object, Object> properties;
 	
@@ -57,6 +54,9 @@ public class Effect
 		LEFT, RIGHT, UP, DOWN, OUTWARDS
 	}
 	
+	/**
+	 * Creates a blank effect.
+	 */
 	public Effect()
 	{
 		this.properties = new HashMap<Object, Object>();
@@ -221,8 +221,8 @@ public class Effect
 	}
 	
 	/**
-	 * Gets the <code>Map</code> of properties belonging to the effect.
-	 * @return  the properties of the effect
+	 * Gets a map of properties belonging to this effect.
+	 * @return  the properties of this effect
 	 */
 	public Map<Object, Object> getProperties()
 	{
@@ -230,15 +230,28 @@ public class Effect
 	}
 	
 	/**
-	 * Gets an array of plugin options that are not supported by the api.
+	 * Gets the plugin options from this effect. The plugin options can
+	 * only be modified using the {@link Effect#setPluginOptions} method.
 	 * <br><b>Note: Plugin options are only available for pre-existing version
 	 * 2.0 plugin-type effects.</b>
 	 * @return  a <code>JSONArray</code> containing the effect pluginOptions
 	 * 			in the json form {"name": NAME, "value": VALUE}
 	 */
-	public JSONArray getPluginOptions()
+	public PluginOptions getPluginOptions()
 	{
-		return (JSONArray)this.properties.get("pluginOptions");
+		//return (JSONArray)this.properties.get("pluginOptions");
+		return PluginOptions.fromJSON(this.properties.get("pluginOptions").toString());
+	}
+	
+	/**
+	 * Sets the plugin options for this effect.
+	 * <br><b>Note: Plugin options are only available for pre-existing version
+	 * 2.0 plugin-type effects.</b>
+	 * @param options  the new plugin options
+	 */
+	public void setPluginOptions(PluginOptions options)
+	{
+		properties.put("pluginOptions", new JSONArray(options.toJSON()));
 	}
 	
 	/**
