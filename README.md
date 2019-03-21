@@ -20,7 +20,7 @@ You can also download the [compilled jar](http://central.maven.org/maven2/io/git
 First, search for all of the Aurora devices connected to your local network, then select one from the returned list. Make sure to store the host name and port.
 ```Java
 int timeout = 5000;
-List<InetSocketAddress> auroras = Setup.quickFindAuroras()
+List<AuroraMetadata> auroras = Setup.findAuroras(timeout);
 String host = auroras.get(0).getHostName();
 int port = auroras.get(0).getPort();
 ```
@@ -51,8 +51,11 @@ aurora.state().toggleOn();              // toggles the state of the Aurora (on -
 ```
 #### Brightness
 ```Java
-int brightness = aurora.state().getBrightness();  // returns the brightness of the Aurora
-aurora.state().setBrightness(0-100);              // sets the brightness of the Aurora (max = 100, min = 0)
+int brightness = aurora.state().getBrightness();   // returns the brightness of the Aurora
+aurora.state().setBrightness(0-100);               // sets the brightness of the Aurora (max = 100, min = 0)
+aurora.state().increaseBrightness(0-100);          // increases the brightness by an amount (max = 100, min = 0)
+aurora.state().decreaseBrightness(0-100);          // decreases the brightness by an amount (max = 100, min = 0)
+aurora.state().fadeToBrightness(0-100, duration);  // smoothly fades to a brightness
 ```
 #### Hue
 ```Java
