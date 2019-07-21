@@ -1,10 +1,13 @@
 package io.github.rowak;
 
+import java.awt.Point;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.json.JSONArray;
@@ -17,6 +20,7 @@ import io.github.rowak.StatusCodeException.ResourceNotFoundException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.StatusCodeException.UnprocessableEntityException;
 import io.github.rowak.effectbuilder.CustomEffectBuilder;
+import io.github.rowak.schedule.Schedule;
 
 /**
  * The primary class in the API. Contains methods and other
@@ -38,6 +42,7 @@ public class Aurora
 	private PanelLayout panelLayout;
 	private Rhythm rhythm;
 	private ExternalStreaming externalStreaming;
+	private Schedules schedules;
 	
 	/**
 	 * Creates a new instance of the Aurora controller.
@@ -109,6 +114,7 @@ public class Aurora
 		this.panelLayout = new PanelLayout();
 		this.rhythm = new Rhythm();
 		this.externalStreaming = new ExternalStreaming();
+		this.schedules = new Schedules();
 		
 		HttpRequest req = get(getURL(""));
 		int code = req.code();
@@ -206,6 +212,16 @@ public class Aurora
 	public ExternalStreaming externalStreaming()
 	{
 		return this.externalStreaming;
+	}
+	
+	/**
+	 * Returns the Aurora's <code>Schedules</code> object which contains
+	 * methods for managing schedules on the Aurora device.
+	 * @return  the Aurora's <code>Schedules</code> object
+	 */
+	public Schedules schedules()
+	{
+		return this.schedules;
 	}
 	
 	/**
@@ -554,6 +570,29 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException
 		{
 			return get(getURL("state/colorMode")).body().replace("\"", "");
+		}
+		
+		/**
+		 * Gets the current color (HSB/RGB) of the Aurora.<br>
+		 * <b>Note: This only works if the Aurora is displaying a solid color.</b>
+		 * @return  the color of the Aurora
+		 */
+		public Color getColor()
+				throws StatusCodeException, UnauthorizedException
+		{
+			return Color.fromHSB(getHue(), getSaturation(), getBrightness());
+		}
+		
+		/**
+		 * Sets the color (HSB/RGB) of the Aurora.
+		 * @param color  the new color
+		 */
+		public void setColor(Color color)
+				throws StatusCodeException, UnauthorizedException
+		{
+			setHue(color.getHue());
+			setSaturation(color.getSaturation());
+			setBrightness(color.getBrightness());
 		}
 	}
 	
@@ -987,9 +1026,9 @@ public class Aurora
 		}
 		
 		/**
-		 * Gets an array of <code>Panel</code>s connected to the Aurora.
-		 * Each <code>Panel</code> contains position data for that <code>Panel</code>.
-		 * @return  an array of <code>Panel</code>s
+		 * Gets an array of the connected panels.
+		 * Each <code>Panel</code> contains the <b>original position data.</b>
+		 * @return  an array of panels
 		 * @throws UnauthorizedException  if the access token is invalid
 		 */
 		public Panel[] getPanels()
@@ -1008,6 +1047,37 @@ public class Aurora
 				pd[i] = new Panel(panelId, x, y, o);
 			}
 			return pd;
+		}
+		
+		/**
+		 * Gets an array of the connected panels that are
+		 * rotated to match the global orientation.
+		 * Each <code>Panel</code> contains <b>modified position data.</b>
+		 * @return an array of rotated panels
+		 * @throws UnauthorizedException  if the access token is invalid
+		 */
+		public Panel[] getPanelsRotated()
+				throws StatusCodeException, UnauthorizedException
+		{
+			Panel[] panels = getPanels();
+			Point origin = getCentroid(panels);
+			int globalOrientation = getGlobalOrientation();
+			globalOrientation = globalOrientation == 360 ? 0 : globalOrientation;
+			double radAngle = Math.toRadians(globalOrientation);
+			for (Panel p : panels)
+			{
+				int x = p.getX() - origin.x;
+				int y = p.getY() - origin.y;
+				
+				double newX = x * Math.cos(radAngle) - y * Math.sin(radAngle);
+				double newY = x * Math.sin(radAngle) + y * Math.cos(radAngle);
+				
+				x = (int)(newX + origin.x);
+				y = (int)(newY + origin.y);
+				p.setX(x);
+				p.setY(y);
+			}
+			return panels;
 		}
 		
 		/**
@@ -1076,6 +1146,35 @@ public class Aurora
 				throws StatusCodeException, UnauthorizedException
 		{
 			return Integer.parseInt(get(getURL("panelLayout/globalOrientation/min")).body());
+		}
+		
+		private Point getCentroid(Panel[] panels)
+		{
+			int centroidX = 0, centroidY = 0;
+			int numXPoints = 0, numYPoints = 0;
+			List<Integer> xpoints = new ArrayList<Integer>();
+			List<Integer> ypoints = new ArrayList<Integer>();
+			
+			for (Panel p : panels)
+			{
+				int x = p.getX();
+				int y = p.getY();
+				if (!xpoints.contains(x))
+				{
+					centroidX += x;
+					xpoints.add(x);
+					numXPoints++;
+				}
+				if (!ypoints.contains(y))
+				{
+					centroidY += y;
+					ypoints.add(y);
+					numYPoints++;
+				}
+			}
+			centroidX /= numXPoints;
+			centroidY /= numYPoints;
+			return new Point(centroidX, centroidY);
 		}
 	}
 	
@@ -1196,8 +1295,8 @@ public class Aurora
 	}
 	
 	/**
-	 * Contains methods for controlling the external streaming
-	 * feature on the Aurora.
+	 * Contains methods for sending panel data to the
+	 * Aurora <b>very quickly</b>.
 	 */
 	public class ExternalStreaming
 	{
@@ -1214,6 +1313,16 @@ public class Aurora
 		public InetSocketAddress getAddress()
 		{
 			return this.address;
+		}
+		
+		/**
+		 * Sets the external streaming address.
+		 * @param address  the <code>SocketAddress</code>
+		 * of the streaming controller
+		 */
+		public void setAddress(InetSocketAddress address)
+		{
+			this.address = address;
 		}
 		
 		/**
@@ -1319,6 +1428,80 @@ public class Aurora
 			setPanel(panel.getId(), red, green, blue, transitionTime);
 		}
 		
+		/**
+		 * Updates the color of a single panel.
+		 * @param panelId  the id of the panel to update
+		 * @param color  the color object
+		 * @param transitionTime  the time to transition to this frame from
+		 * 						  the previous frame (must be 1 or greater)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws SocketException  if the target Aurora cannot be found or connected to
+		 * @throws IOException  if an I/O error occurs
+		 */
+		public void setPanel(int panelId, Color color, int transitionTime)
+				throws StatusCodeException, UnauthorizedException,
+				SocketException, IOException
+		{
+			setPanel(panelId, color.getRed(),
+					color.getGreen(), color.getBlue(), transitionTime);
+		}
+		
+		/**
+		 * Updates the color of a single panel.
+		 * @param panel  the panel to update
+		 * @param color  the color object
+		 * @param transitionTime  the time to transition to this frame from
+		 * 						  the previous frame (must be 1 or greater)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws SocketException  if the target Aurora cannot be found or connected to
+		 * @throws IOException  if an I/O error occurs
+		 */
+		public void setPanel(Panel panel, Color color, int transitionTime)
+				throws StatusCodeException, UnauthorizedException,
+				SocketException, IOException
+		{
+			setPanel(panel.getId(), color.getRed(),
+					color.getGreen(), color.getBlue(), transitionTime);
+		}
+		
+		/**
+		 * Updates the color of a single panel.
+		 * @param panel  the id of the panel to update
+		 * @param color  the hex color code
+		 * @param transitionTime  the time to transition to this frame from
+		 * 						  the previous frame (must be 1 or greater)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws SocketException  if the target Aurora cannot be found or connected to
+		 * @throws IOException  if an I/O error occurs
+		 */
+		public void setPanel(int panelId, String hexColor, int transitionTime)
+				throws StatusCodeException, UnauthorizedException,
+				SocketException, IOException
+		{
+			java.awt.Color color = java.awt.Color.decode(hexColor);
+			setPanel(panelId, color.getRed(),
+					color.getGreen(), color.getBlue(), transitionTime);
+		}
+		
+		/**
+		 * Updates the color of a single panel.
+		 * @param panel  the panel to update
+		 * @param color  the hex color code
+		 * @param transitionTime  the time to transition to this frame from
+		 * 						  the previous frame (must be 1 or greater)
+		 * @throws UnauthorizedException  if the access token is invalid
+		 * @throws SocketException  if the target Aurora cannot be found or connected to
+		 * @throws IOException  if an I/O error occurs
+		 */
+		public void setPanel(Panel panel, String hexColor, int transitionTime)
+				throws StatusCodeException, UnauthorizedException,
+				SocketException, IOException
+		{
+			java.awt.Color color = java.awt.Color.decode(hexColor);
+			setPanel(panel.getId(), color.getRed(),
+					color.getGreen(), color.getBlue(), transitionTime);
+		}
+		
 		private byte[] animDataToBytes(String animData)
 		{
 			String[] dataStr = animData.split(" ");
@@ -1326,6 +1509,142 @@ public class Aurora
 			for (int i = 0; i < dataStr.length; i++)
 				dataBytes[i] = (byte)Integer.parseInt(dataStr[i]);
 			return dataBytes;
+		}
+	}
+	
+	/**
+	 * Contains methods for managing schedules on the Aurora.
+	 */
+	public class Schedules
+	{
+		/**
+		 * Gets an array of schedules stored on the Aurora.
+		 * @return  an array of schedules
+		 */
+		public Schedule[] getSchedules()
+		{
+			HttpRequest req = HttpRequest.get(getURL("schedules"));
+			JSONObject obj = new JSONObject(req.body());
+			JSONArray arr = obj.getJSONArray("schedules");
+			Schedule[] schedules = new Schedule[arr.length()];
+			for (int i = 0; i < arr.length(); i++)
+			{
+				schedules[i] = Schedule.fromJSON(
+						arr.getJSONObject(i).toString());
+			}
+			return schedules;
+		}
+		
+		/**
+		 * Uploads an array of schedules to the Aurora.
+		 * @param schedules  an array of schedules
+		 * @throws UnprocessableEntityException  if one of the schedules are invalid
+		 */
+		public void addSchedules(Schedule[] schedules)
+				throws UnprocessableEntityException, StatusCodeException
+		{
+			String schedulesStr = "\"schedules\":[";
+			for (int i = 0; i < schedules.length; i++)
+			{
+				schedulesStr += schedules[i];
+				if (i < schedules.length-1)
+				{
+					schedulesStr += ",";
+				}
+				else
+				{
+					schedulesStr += "]";
+				}
+			}
+			String body = String.format("{\"write\":{\"command\":" +
+					"\"addSchedules\",%s}}", schedulesStr);
+			HttpRequest req = HttpRequest.put(getURL("effects"));
+			req.send(body);
+			req.code();
+		}
+		
+		/**
+		 * Uploads a schedule to the Aurora.
+		 * @param schedule  the schedule
+		 * @throws UnprocessableEntityException  if the schedule is invalid
+		 */
+		public void addSchedule(Schedule schedule)
+				throws UnprocessableEntityException, StatusCodeException
+		{
+			addSchedules(new Schedule[]{schedule});
+		}
+		
+		/**
+		 * Deletes an array of schedules from the Aurora.
+		 * @param schedules  an array of schedules
+		 * @throws UnprocessableEntityException  if the Aurora does not contain
+		 * 										 one of the schedules
+		 */
+		public void removeSchedules(Schedule[] schedules)
+				throws UnprocessableEntityException, StatusCodeException
+		{
+			int[] ids = new int[schedules.length];
+			for (int i = 0; i < schedules.length; i++)
+			{
+				ids[i] = schedules[i].getId();
+			}
+			removeSchedulesById(ids);
+		}
+		
+		/**
+		 * Deletes a schedule from the Aurora.
+		 * @param schedule  the schedule
+		 * @throws UnprocessableEntityException  if the Aurora does not
+		 * 										 contain the schedule
+		 */
+		public void removeSchedule(Schedule schedule)
+				throws UnprocessableEntityException, StatusCodeException
+		{
+			removeSchedules(new Schedule[]{schedule});
+		}
+		
+		/**
+		 * Deletes an array of schedules from the Aurora
+		 * using their unique schedule IDs.
+		 * @param scheduleIds  an array of schedule IDs
+		 * @throws UnprocessableEntityException  if the Aurora does not contain one
+		 * 										 of the schedule IDs
+		 */
+		public void removeSchedulesById(int[] scheduleIds)
+				throws UnprocessableEntityException, StatusCodeException
+		{
+			String schedulesStr = "\"schedules\":[";
+			for (int i = 0; i < scheduleIds.length; i++)
+			{
+				schedulesStr += String.format("{\"id\":%d}",
+						scheduleIds[i]);
+				if (i < scheduleIds.length-1)
+				{
+					schedulesStr += ",";
+				}
+				else
+				{
+					schedulesStr += "]";
+				}
+			}
+			String body = String.format("{\"write\":{\"command\":" +
+					"\"removeSchedules\",%s}}", schedulesStr);
+			HttpRequest req = HttpRequest.put(getURL("effects"));
+			req.send(body);
+			checkStatusCode(req.code());
+		}
+		
+		/**
+		 * Deletes a schedule from the Aurora using
+		 * its unique schedule ID.
+		 * @param scheduleId  the schedule ID
+		 * @throws UnprocessableEntityException  if the Aurora does not contain
+		 * 										 the schedule ID
+		 */
+		public void removeScheduleById(int scheduleId)
+				throws UnprocessableEntityException, StatusCodeException
+		{
+			removeSchedulesById(new int[]{scheduleId});
 		}
 	}
 	

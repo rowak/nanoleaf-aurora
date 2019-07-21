@@ -10,6 +10,71 @@ public class Color
 	private double probability;
 	
 	/**
+	 * The color black as RGB(0, 0, 0).
+	 */
+	public static final Color BLACK = fromRGB(0, 0, 0);
+	
+	/**
+	 * The color white as RGB(255, 255, 255).
+	 */
+	public static final Color WHITE = fromRGB(255, 255, 255);
+	
+	/**
+	 * The color red as RGB(255, 0, 0).
+	 */
+	public static final Color RED = fromRGB(255, 0, 0);
+	
+	/**
+	 * The color blue as RGB(0, 255, 0).
+	 */
+	public static final Color GREEN = fromRGB(0, 255, 0);
+	
+	/**
+	 * The color green as RGB(0, 0, 255).
+	 */
+	public static final Color BLUE = fromRGB(0, 0, 255);
+	
+	/**
+	 * The color magenta as RGB(255, 0, 255).
+	 */
+	public static final Color MAGENTA = fromRGB(255, 0, 255);
+	
+	/**
+	 * The color yellow as RGB(255, 255, 0).
+	 */
+	public static final Color YELLOW = fromRGB(255, 255, 0);
+	
+	/**
+	 * The color cyan as RGB(0, 255, 255).
+	 */
+	public static final Color CYAN = fromRGB(0, 255, 255);
+	
+	/**
+	 * The color gray as RGB(128, 128, 128).
+	 */
+	public static final Color GRAY = fromRGB(128, 128, 128);
+	
+	/**
+	 * The color light gray as RGB(192, 192, 192).
+	 */
+	public static final Color LIGHT_GRAY = fromRGB(192, 192, 192);
+	
+	/**
+	 * The color dark gray as RGB(64, 64, 64).
+	 */
+	public static final Color DARK_GRAY = fromRGB(64, 64, 64);
+	
+	/**
+	 * The color pink as RGB(255, 175, 175).
+	 */
+	public static final Color PINK = fromRGB(255, 175, 175);
+	
+	/**
+	 * The color orange as RGB(255, 200, 0).
+	 */
+	public static final Color ORANGE = fromRGB(255, 200, 0);
+	
+	/**
 	 * Creates an HSB instance of <code>Color</code> <u>without</u> probability.
 	 * @param hue  the hue of the color
 	 * @param saturation  the saturation of the color

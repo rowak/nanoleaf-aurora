@@ -34,6 +34,16 @@ public class StaticEffectBuilder
 	}
 	
 	/**
+	 * Gets a map of the frames for this effect. The key represents the
+	 * panel and the value represents the frame for the corresponding panel.
+	 * @return  a map of the frames for this effect
+	 */
+	public Map<Integer, Frame> getFrames()
+	{
+		return frames;
+	}
+	
+	/**
 	 * Creates a new <code>static</code>-type effect
 	 * using the animation data from the <code>StaticEffectBuilder</code>.
 	 * @param effectName  the desired effect name

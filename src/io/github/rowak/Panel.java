@@ -36,6 +36,15 @@ public class Panel extends Position
 	}
 	
 	/**
+	 * Gets the color of the panels.
+	 * @return  the color of the panels
+	 */
+	public Color getColor()
+	{
+		return Color.fromRGB(r, g, b);
+	}
+	
+	/**
 	 * Gets the red RGBW value of the panel's color.
 	 * @return  the panel's red value
 	 */

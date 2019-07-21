@@ -1,7 +1,11 @@
-package io.github.rowak;
+package io.github.rowak.tools;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import io.github.rowak.Effect;
+import io.github.rowak.Frame;
+import io.github.rowak.Panel;
 
 /**
  * A helper class to assist with the parsing of

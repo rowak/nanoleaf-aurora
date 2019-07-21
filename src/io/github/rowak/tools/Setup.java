@@ -1,4 +1,4 @@
-package io.github.rowak;
+package io.github.rowak.tools;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -18,8 +18,14 @@ import org.json.JSONObject;
 import com.github.kevinsawicki.http.HttpRequest;
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
+import io.github.rowak.AuroraMetadata;
+import io.github.rowak.StatusCodeException;
+import io.github.rowak.StatusCodeException.BadRequestException;
+import io.github.rowak.StatusCodeException.ForbiddenException;
 import io.github.rowak.StatusCodeException.InternalServerErrorException;
+import io.github.rowak.StatusCodeException.ResourceNotFoundException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.StatusCodeException.UnprocessableEntityException;
 
 /**
  * A utility class with useful Aurora management methods.

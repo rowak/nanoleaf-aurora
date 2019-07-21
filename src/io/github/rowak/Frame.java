@@ -8,7 +8,7 @@ public class Frame
 	private int r, g, b, w, t;
 	
 	/**
-	 * Creates a new instance of a <code>Frame</code>.
+	 * Creates a new instance of a <code>Frame</code> from an RGBW color.
 	 * @param red  the red RGBW value of the frame's color
 	 * @param green  the green RGBW value of the frame's color
 	 * @param blue  the blue RGBW value of the frame's color
@@ -24,6 +24,21 @@ public class Frame
 		this.g = green;
 		this.b = blue;
 		this.w = white;
+		this.t = transitionTime;
+	}
+	
+	/**
+	 * Creates a new instance of a <code>Frame<code> from a <code>Color</code>.
+	 * @param color  the color of the frame
+	 * @param transitionTime  the duration of transition between
+	 * 						  the previous frame and this frame
+	 */
+	public Frame(Color color, int transitionTime)
+	{
+		this.r = color.getRed();
+		this.g = color.getGreen();
+		this.b = color.getBlue();
+		this.w = 0;
 		this.t = transitionTime;
 	}
 	

@@ -23,7 +23,7 @@ public class CustomEffectBuilder
 	
 	/**
 	 * Creates a new <code>CustomEffectBuilder</code> object.
-	 * @param controller  the desired Aurora controller
+	 * @param controller  the Aurora controller
 	 * @throws UnauthorizedException  if the Aurora access token is invalid
 	 */
 	public CustomEffectBuilder(Aurora controller)
@@ -33,6 +33,29 @@ public class CustomEffectBuilder
 		frames = new HashMap<Integer, List<Frame>>();
 		for (Panel panel : panels)
 			frames.put(panel.getId(), new ArrayList<Frame>());
+	}
+	
+	/**
+	 * Creates a new <code>CustomEffectBuilder</code> object
+	 * <i>without</i> requesting panel data from the Aurora.
+	 * @param panels  the panel data
+	 */
+	public CustomEffectBuilder(Panel[] panels)
+	{
+		this.panels = panels;
+		frames = new HashMap<Integer, List<Frame>>();
+		for (Panel panel : panels)
+			frames.put(panel.getId(), new ArrayList<Frame>());
+	}
+	
+	/**
+	 * Gets a map of the frames in this effect. The key represents the panel
+	 * and the value represents a list of the frames for the corresponding panel.
+	 * @return  a map of the frames for this effect
+	 */
+	public Map<Integer, List<Frame>> getFrames()
+	{
+		return frames;
 	}
 	
 	/**
