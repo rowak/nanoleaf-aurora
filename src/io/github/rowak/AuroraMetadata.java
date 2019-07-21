@@ -25,7 +25,10 @@ public class AuroraMetadata
 	public AuroraMetadata(String hostName, int port,
 			String deviceId, String deviceName)
 	{
-		
+		this.hostName = hostName;
+		this.port = port;
+		this.deviceId = deviceId;
+		this.deviceName = deviceName;
 	}
 	
 	/**
