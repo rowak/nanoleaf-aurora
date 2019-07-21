@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.json.JSONObject;
 
 /**
- * A <i>local</i> interface for an Aurora schedule.
+ * A <b>local</b> interface for an Aurora schedule.
  * Setter methods in this class will not have an effect on the Aurora.
  */
 public class Schedule
