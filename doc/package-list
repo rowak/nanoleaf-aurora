@@ -1,2 +1,5 @@
-io.github.rowak
-io.github.rowak.effectbuilder
+io.github.rowak.nanoleafapi
+io.github.rowak.nanoleafapi.effectbuilder
+io.github.rowak.nanoleafapi.schedule
+io.github.rowak.nanoleafapi.schedule.builder
+io.github.rowak.nanoleafapi.tools
