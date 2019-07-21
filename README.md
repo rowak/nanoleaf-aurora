@@ -10,7 +10,7 @@ Simply add the following dependency to your ```pom.xml``` file in your project.
 <dependency>
   <groupId>io.github.rowak</groupId>
   <artifactId>nanoleaf-aurora</artifactId>
-  <version>1.4.0</version>
+  <version>1.5.0</version>
 </dependency>
 ```
 ### Manual
@@ -128,6 +128,30 @@ Effect effect = new CustomEffectBuilder(aurora)                      // creates 
                 .build("My Animation", true);                        // builds the animation data and saves it to the effect object
 aurora.effects().addEffect(effect);                                  // uploads the new effect to the Aurora
 ```
+
+## Schedules
+You can create and manage highly customizable schedules that are saved and controlled locally by the Aurora.
+### Getting the Schedules
+You can request a list of saved schedules on the Aurora using the ```Aurora.Schedules.getSchedules()``` method.
+### Creating a Schedule
+Creating a schedule from scratch requires quite a lot of information. The following example shows how to create a complex schedule which changes the effect to a random color effect every hour from the time it is created. It also transitions the brightness to 50% over a ten second period.
+```Java
+Schedule s = new ScheduleBuilder()
+	.setId(7)                                         // set the schedule's unique ID to 7
+	.setEnabled(true)                                 // enable the schedule when it is created
+	.setStartTime(Calendar.getInstance().getTime())   // set the starting time to when the schedule is created
+	.setAction(new ScheduleActionBuilder()
+			.setOn(true)                                  // transition to 50% brightness over a 10 second period
+			.setBrightness(50, 10)
+			.setEffects(new ScheduleEffects(true,         // enable random mode
+					RandomType.COLOR, null))                  // random mode will only pick from color type effects
+			.build())
+	.setRepeat(new ScheduleRepeat(RepeatType.HOURLY,  // repeat hourly
+			1, null))                                     // repeat every 1 hour
+	.build();
+```
+### Deleting a Schedule
+Schedules can be deleted using either the ```Schedule``` object (```Aurora.Schedules.removeSchedule(schedule)``` method) or by a schedule's unique ID (```Aurora.Schedules.removeScheduleById(id)``` method). 
 
 ## StatusCodeExceptions
 A StatusCodeException is thrown whenever the response code from a request to the Aurora is an error (400, 401, 403, 404, 422, 500).
