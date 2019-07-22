@@ -150,6 +150,8 @@ Schedule s = new ScheduleBuilder()
 			1, null))                                     // repeat every 1 hour
 	.build();
 ```
+### Adding a Schedule
+Schedules can be uploaded to the Aurora using the ```Aurora.Schedules.addSchedule(schedule)``` method.
 ### Deleting a Schedule
 Schedules can be deleted using either the ```Schedule``` object (```Aurora.Schedules.removeSchedule(schedule)``` method) or by a schedule's unique ID (```Aurora.Schedules.removeScheduleById(id)``` method). 
 
