@@ -52,8 +52,11 @@
         </executions>
         <configuration>
           <sourceFileIncludes>
-            <include>io/github/rowak/*.java</include>
-			<include>io/github/rowak/effectbuilder/*.java</include>
+            <include>io/github/rowak/nanoleafapi/*.java</include>
+			<include>io/github/rowak/nanoleafapi/effectbuilder/*.java</include>
+		  	<include>io/github/rowak/nanoleafapi/schedule/*.java</include>
+		  	<include>io/github/rowak/nanoleafapi/schedule/builder/*.java</include>
+		  	<include>io/github/rowak/nanoleafapi/tools/*.java</include>
           </sourceFileIncludes>
         </configuration>
       </plugin>
