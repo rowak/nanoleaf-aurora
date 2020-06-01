@@ -10,7 +10,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,6 +28,10 @@ import io.github.rowak.nanoleafapi.StatusCodeException.InternalServerErrorExcept
 import io.github.rowak.nanoleafapi.StatusCodeException.ResourceNotFoundException;
 import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafapi.StatusCodeException.UnprocessableEntityException;
+import net.straylightlabs.hola.dns.Domain;
+import net.straylightlabs.hola.sd.Instance;
+import net.straylightlabs.hola.sd.Query;
+import net.straylightlabs.hola.sd.Service;
 
 /**
  * A utility class with useful Aurora management methods.
@@ -33,6 +39,30 @@ import io.github.rowak.nanoleafapi.StatusCodeException.UnprocessableEntityExcept
 public class Setup
 {
 	public static int DEFAULT_PORT = 16021;
+	public static String NANOLEAF_MDNS_SERVICE = "_nanoleafapi._tcp";
+	
+	/**
+	 * Searches for Aurora devices on the local network using mDNS.<br>
+	 * <i>Note: This method has the potential to fail (and return an empty array).
+	 * You may want to call the method more than once or handle this in some other way.</i>
+	 * @return  a collection of type <code>AuroraMetadata</code>,
+	 * 			with each element containing the metadata of an Aurora controller
+	 * @throws IOException  unknown IO exception
+	 * @throws UnknownHostException  if the host's local address cannot be found
+	 */
+	public static List<AuroraMetadata> findAuroras()
+		throws UnknownHostException, IOException
+	{
+		List<AuroraMetadata> auroras = new ArrayList<AuroraMetadata>();
+		Service service = Service.fromName(NANOLEAF_MDNS_SERVICE);
+        Query query = Query.createFor(service, Domain.LOCAL);
+        Set<Instance> instances = query.runOnce();
+        for (Iterator<Instance> it = instances.iterator(); it.hasNext();)
+        {
+        	auroras.add(AuroraMetadata.fromMDNSInstance(it.next()));
+        }
+        return auroras;
+	}
 	
 	/**
 	 * Searches for Aurora devices on the local network using SSDP.
@@ -43,6 +73,7 @@ public class Setup
 	 * @throws SocketTimeoutException  (inevitable) once the socket's timeout reaches <code>timeout</code>
 	 * @throws UnknownHostException  if the host's local address cannot be found
 	 */
+	@Deprecated
 	public static List<AuroraMetadata> findAuroras(int timeout)
 			throws IOException, SocketTimeoutException, UnknownHostException
 	{
@@ -102,7 +133,7 @@ public class Setup
 					responsePacket = new DatagramPacket(new byte[1536], 1536);
 					socket.receive(responsePacket);
 					String data = new String(responsePacket.getData());
-					AuroraMetadata metadata = AuroraMetadata.fromPacketData(data);
+					AuroraMetadata metadata = AuroraMetadata.fromSSDPPacketData(data);
 					auroras.add(metadata);
 				}
 				catch (NumberFormatException nfe)
@@ -137,6 +168,7 @@ public class Setup
 	 * @return  a collection of type <code>InetSocketAddress</code>,
 	 * 			with each element representing an Aurora controller
 	 */
+	@Deprecated
 	public static List<InetSocketAddress> quickFindAuroras()
 	{
 		List<InetSocketAddress> auroras = new ArrayList<InetSocketAddress>();

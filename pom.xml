@@ -9,7 +9,7 @@
 
   <groupId>io.github.rowak</groupId>
   <artifactId>nanoleaf-aurora</artifactId>
-  <version>1.5.0</version>
+  <version>1.5.1</version>
 
   <distributionManagement>
     <snapshotRepository>
@@ -41,7 +41,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.9.1</version>
+        <version>3.0.0</version>
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -51,6 +51,7 @@
           </execution>
         </executions>
         <configuration>
+          <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
           <sourceFileIncludes>
             <include>io/github/rowak/nanoleafapi/*.java</include>
 			<include>io/github/rowak/nanoleafapi/effectbuilder/*.java</include>
@@ -60,6 +61,7 @@
           </sourceFileIncludes>
         </configuration>
       </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
@@ -99,4 +101,8 @@
       <version>20180813</version>
     </dependency>
   </dependencies>
+  <properties>
+    <maven.compiler.source>1.9</maven.compiler.source>
+    <maven.compiler.target>1.9</maven.compiler.target>
+  </properties>
 </project>

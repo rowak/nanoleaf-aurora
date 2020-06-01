@@ -1,9 +1,14 @@
 package io.github.rowak.nanoleafapi;
 
+import java.net.InetAddress;
+import java.util.Iterator;
+
+import net.straylightlabs.hola.sd.Instance;
+
 /**
  * An object for storing information related to an
  * Aurora device. This informtion is typically received
- * from SSDP broadcast packets.
+ * from mDNS/SSDP broadcast packets.
  */
 public class AuroraMetadata
 {
@@ -33,13 +38,34 @@ public class AuroraMetadata
 	
 	/**
 	 * Creates a new <code>AuroraMetadata</code> object using
+	 * packet data from an mDNS broadcast.<br>
+	 * <b>Note: This is used internally by the api.</b>
+	 * @param instance  the packet data containing the
+	 * 			        Aurora device information
+	 * @return  a new <code>AuroraMetadata</code> object
+	 */
+	public static AuroraMetadata fromMDNSInstance(Instance instance)
+	{
+		System.out.println(instance);
+		AuroraMetadata metadata = new AuroraMetadata(null, 0, null, null);
+		Iterator<InetAddress> addresses = instance.getAddresses().iterator();
+		metadata.setHostName(addresses.next().getHostName());
+		metadata.setPort(instance.getPort());
+		metadata.setDeviceId(addresses.next().getHostAddress());
+		metadata.setDeviceName(instance.getName());
+		return metadata;
+	}
+	
+	/**
+	 * Creates a new <code>AuroraMetadata</code> object using
 	 * packet data from an SSDP broadcast.<br>
 	 * <b>Note: This is used internally by the api.</b>
 	 * @param data  the packet data containing the
 	 * 			    Aurora device information
 	 * @return  a new <code>AuroraMetadata</code> object
 	 */
-	public static AuroraMetadata fromPacketData(String data)
+	@Deprecated
+	public static AuroraMetadata fromSSDPPacketData(String data)
 	{
 		AuroraMetadata metadata = new AuroraMetadata(null, 0, null, null);
 		data = data.trim();
