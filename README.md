@@ -14,7 +14,7 @@ Simply add the following dependency to your ```pom.xml``` file in your project.
 </dependency>
 ```
 ### Manual
-You can also download the [compiled jar](http://central.maven.org/maven2/io/github/rowak/nanoleaf-aurora/) and import it into your project.
+You can also download the [compiled jar](https://repo1.maven.org/maven2/io/github/rowak/nanoleaf-aurora/) and import it into your project.
 
 ## Connecting to the Aurora
 First, search for all of the Aurora devices connected to your local network, then select one from the returned list. Make sure to store the host name and port.
