@@ -1,7 +1,7 @@
 # Nanoleaf Aurora Java API
 A java interface/wrapper and JSON parser for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional high-level helper methods and classes to make your life easier. The API is designed to be simpler to use than the official API by abstracting the use of JSON data.
 
-## [Documentation](https://cdn.statically.io/gh/rowak/nanoleaf-aurora/92edca34/doc/index.html)
+## [Documentation](https://rawcdn.githack.com/rowak/nanoleaf-aurora/42ba2f07f88a815a147574fd90f5e35833daa250/doc/index.html)
 
 ## Installation
 ### Maven
@@ -10,11 +10,11 @@ Simply add the following dependency to your ```pom.xml``` file in your project.
 <dependency>
   <groupId>io.github.rowak</groupId>
   <artifactId>nanoleaf-aurora</artifactId>
-  <version>1.5.0</version>
+  <version>1.5.1</version>
 </dependency>
 ```
 ### Manual
-You can also download the [compilled jar](http://central.maven.org/maven2/io/github/rowak/nanoleaf-aurora/) and import it into your project.
+You can also download the [compiled jar](http://central.maven.org/maven2/io/github/rowak/nanoleaf-aurora/) and import it into your project.
 
 ## Connecting to the Aurora
 First, search for all of the Aurora devices connected to your local network, then select one from the returned list. Make sure to store the host name and port.
@@ -129,7 +129,7 @@ Effect effect = new CustomEffectBuilder(aurora)                      // creates 
 aurora.effects().addEffect(effect);                                  // uploads the new effect to the Aurora
 ```
 
-## Schedules
+## Schedules (WIP)
 You can create and manage highly customizable schedules that are saved and controlled locally by the Aurora.
 ### Getting the Schedules
 You can request a list of saved schedules on the Aurora using the ```Aurora.Schedules.getSchedules()``` method.
