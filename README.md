@@ -20,7 +20,7 @@ You can also download the [compiled jar](https://repo1.maven.org/maven2/io/githu
 First, search for all of the Aurora devices connected to your local network, then select one from the returned list. Make sure to store the host name and port.
 ```Java
 int timeout = 5000;
-List<AuroraMetadata> auroras = Setup.findAuroras(timeout);
+List<AuroraMetadata> auroras = Setup.findAuroras();
 String host = auroras.get(0).getHostName();
 int port = auroras.get(0).getPort();
 ```
@@ -74,7 +74,7 @@ aurora.state().setColorTemperature(1200-6500);        // sets the color temperat
 ```
 
 ### Effects
-The API includes various effect methods for adding, removing, renaming, previewing, and getting effects from the Aurora. Below are a few examples, but refer to the [project documentation](https://htmlpreview.github.io/?https://github.com/rowak/nanoleaf-aurora/blob/master/doc/index.html) for more information.
+The API includes various effect methods for adding, removing, renaming, previewing, and getting effects from the Aurora. Below are a few examples, but refer to the [project documentation](https://rawcdn.githack.com/rowak/nanoleaf-aurora/42ba2f07f88a815a147574fd90f5e35833daa250/doc/index.html) for more information.
 ```Java
 String currentEffect = aurora.effects().getCurrentEffectName();  // returns the name of the current effect
 aurora.effects().setEffect(effectName);                          // sets the current effect to an existing effect
