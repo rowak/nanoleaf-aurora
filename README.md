@@ -1,6 +1,8 @@
 # Nanoleaf Aurora Java API
 A java interface/wrapper and JSON parser for the Nanoleaf Aurora RESTful API that fully supports all features of the official API, but adds additional high-level helper methods and classes to make your life easier. The API is designed to be simpler to use than the official API by abstracting the use of JSON data.
 
+This library is intended to be used with Auora (now known as "Light Panels") devices, however most of the methods will still work correctly with the Canvas (and potentially the Hexagons). Full support for these devices will be added in the future when I get my hands on them.
+
 ## [Documentation](https://rawcdn.githack.com/rowak/nanoleaf-aurora/42ba2f07f88a815a147574fd90f5e35833daa250/doc/index.html)
 
 ## Installation
