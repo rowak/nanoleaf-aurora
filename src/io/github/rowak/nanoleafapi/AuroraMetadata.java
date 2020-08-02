@@ -46,7 +46,6 @@ public class AuroraMetadata
 	 */
 	public static AuroraMetadata fromMDNSInstance(Instance instance)
 	{
-		System.out.println(instance);
 		AuroraMetadata metadata = new AuroraMetadata(null, 0, null, null);
 		Iterator<InetAddress> addresses = instance.getAddresses().iterator();
 		metadata.setHostName(addresses.next().getHostName());
