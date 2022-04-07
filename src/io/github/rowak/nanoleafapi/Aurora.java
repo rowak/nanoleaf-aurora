@@ -1046,7 +1046,8 @@ public class Aurora
 				int x = data.getInt("x");
 				int y = data.getInt("y");
 				int o = data.getInt("o");
-				pd[i] = new Panel(panelId, x, y, o);
+				int shapeType = data.getInt("shapeType");
+				pd[i] = new Panel(panelId, x, y, o, shapeType);
 			}
 			return pd;
 		}

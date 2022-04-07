@@ -12,6 +12,7 @@ import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 public class Panel extends Position
 {
 	private int id, r, g, b, w;
+	private int shapeType;
 	
 	/**
 	 * Creates a new instance of a <code>Panel</code>.
@@ -26,6 +27,20 @@ public class Panel extends Position
 		this.id = id;
 	}
 	
+	/**
+	 * Creates a new instance of a <code>Panel</code>.
+	 * @param id  the id of the panel
+	 * @param x  the x-value of the panel location
+	 * @param y  the y-value of the panel location
+	 * @param orientation  the panel's orientation on the Aurora grid
+	 * @param shapeType  the panel's shape type
+	 */
+	public Panel(int id, int x, int y, int orientation, int shapeType)
+	{
+		this(id, x, y, orientation);
+		this.shapeType = shapeType;
+	}
+
 	/**
 	 * Gets the unique ID for the panel.
 	 * @return  the panel's unique ID
@@ -42,6 +57,15 @@ public class Panel extends Position
 	public Color getColor()
 	{
 		return Color.fromRGB(r, g, b);
+	}
+
+	/**
+	 * Gets the panel's shape type
+	 * @return  the panel's shape type
+	 */
+	public int getShapeType()
+	{
+		return this.shapeType;
 	}
 	
 	/**
